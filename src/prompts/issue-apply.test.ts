@@ -11,6 +11,8 @@ const mockIssue: GitHubIssue = {
   title: "Test Issue",
   body: "This is the issue body\n\n## 受け入れ条件\n- [ ] Condition 1",
   labels: ["enhancement", "priority-high"],
+  assignees: [],
+  milestone: null,
   url: "https://github.com/owner/repo/issues/123",
   state: "open",
 };

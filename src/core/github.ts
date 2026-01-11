@@ -56,14 +56,23 @@ function getRepoInfo(repoPath: string): { owner: string; repo: string } {
   return { owner: match[1], repo: match[2] };
 }
 
-function getOctokit(): Octokit {
-  const token = process.env.GH_TOKEN || process.env.GITHUB_TOKEN;
-  if (!token) {
+function getGitHubToken(): string {
+  // 1. 環境変数を優先（CI/CD、明示設定用）
+  const envToken = process.env.GH_TOKEN || process.env.GITHUB_TOKEN;
+  if (envToken) return envToken;
+
+  // 2. gh CLI からトークンを取得
+  try {
+    return execSync("gh auth token", { encoding: "utf-8", stdio: ["pipe", "pipe", "pipe"] }).trim();
+  } catch {
     throw new Error(
-      "GitHub token not found. Set GH_TOKEN or GITHUB_TOKEN environment variable."
+      "GitHub token not found. Run 'gh auth login' or set GH_TOKEN environment variable."
     );
   }
-  return new Octokit({ auth: token });
+}
+
+function getOctokit(): Octokit {
+  return new Octokit({ auth: getGitHubToken() });
 }
 
 export async function fetchIssue(

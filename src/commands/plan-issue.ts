@@ -54,7 +54,7 @@ export async function planIssue(
   const result = await runAgent({
     prompt,
     cwd: repoPath,
-    model: options.model ?? "claude-opus-4-5-20250929",
+    model: options.model ?? "claude-opus-4-5-20251101",
     permissionMode: "plan",
     allowedTools: ["Read", "Glob", "Grep", "WebSearch", "WebFetch"],
     logger,

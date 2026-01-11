@@ -15,7 +15,7 @@ program
   .option("-r, --request <text>", "Implementation request (text)")
   .option("-f, --request-file <path>", "Implementation request (file)")
   .option("--repo <path>", "Target repository path", process.cwd())
-  .option("--model <model>", "Model to use", "claude-opus-4-5-20250929")
+  .option("--model <model>", "Model to use", "claude-opus-4-5-20251101")
   .option("--dry-run", "Show what would be created without creating")
   .option("--no-interactive", "Non-interactive mode")
   .action(async (opts) => {

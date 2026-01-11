@@ -49,7 +49,7 @@ npx claude-agent plan-issue --request "機能追加" --repo /path/to/repo
 | `-r, --request <text>` | 依頼内容（テキスト） | - |
 | `-f, --request-file <path>` | 依頼内容（ファイル） | - |
 | `--repo <path>` | 対象リポジトリ | カレントディレクトリ |
-| `--model <model>` | 使用モデル | claude-opus-4-5-20250929 |
+| `--model <model>` | 使用モデル | claude-opus-4-5-20251101 |
 | `--dry-run` | Issue作成をスキップ | false |
 | `--no-interactive` | 非インタラクティブモード | - |
 
@@ -164,8 +164,10 @@ logs/issue-apply/20240115-120000-12345/
 
 | 変数名 | 説明 | 必須 |
 |-------|------|-----|
-| `GH_TOKEN` または `GITHUB_TOKEN` | GitHub Personal Access Token | Yes |
+| `GH_TOKEN` または `GITHUB_TOKEN` | GitHub Personal Access Token | `gh auth login` 済みなら不要 |
 | `ANTHROPIC_API_KEY` | Anthropic API Key | Yes |
+
+**Note**: GitHub認証は `gh auth login` でログイン済みであれば環境変数の設定は不要です。環境変数が設定されている場合はそちらが優先されます。
 
 ## ライセンス
 
