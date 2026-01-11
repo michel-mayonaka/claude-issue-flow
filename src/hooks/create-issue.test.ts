@@ -22,7 +22,19 @@ function parsePlanFromInput(plan: string): ParsedPlan | null {
 
   // タイトル行以降を本文として取得
   const titleIndex = plan.indexOf(titleMatch[0]);
-  const body = plan.slice(titleIndex + titleMatch[0].length).trim();
+  let body = plan.slice(titleIndex + titleMatch[0].length).trim();
+
+  // 計画の終端を検出（---の後のテキストを削除）
+  // ただし、---の後に見出し（#で始まる行）がある場合は削除しない
+  const separatorIndex = body.lastIndexOf("\n---\n");
+  if (separatorIndex !== -1) {
+    // ---の後のテキストを取得（空行をスキップ）
+    const afterSeparator = body.slice(separatorIndex + 5).replace(/^\n+/, "");
+    // 見出し（#で始まる）でない場合は削除
+    if (afterSeparator && !afterSeparator.startsWith("#")) {
+      body = body.slice(0, separatorIndex).trim();
+    }
+  }
 
   return { title, body };
 }
@@ -132,6 +144,48 @@ const x = 1;
     expect(result!.body).toContain("- `file1.ts`: 変更1");
     expect(result!.body).toContain("1. ステップ1");
     expect(result!.body).toContain("```typescript");
+  });
+
+  it("should remove trailing text after separator (---)", () => {
+    const plan = `# 計画: テスト機能
+
+## 概要
+テスト機能を追加
+
+## 注意事項
+- 注意点1
+
+---
+
+この計画で問題ありませんか？承認いただければ終了します。`;
+
+    const result = parsePlanFromInput(plan);
+
+    expect(result).not.toBeNull();
+    expect(result!.title).toBe("テスト機能");
+    expect(result!.body).toContain("## 概要");
+    expect(result!.body).toContain("## 注意事項");
+    expect(result!.body).not.toContain("この計画で問題ありませんか");
+    expect(result!.body).not.toContain("承認いただければ終了します");
+  });
+
+  it("should keep separator when followed by heading", () => {
+    const plan = `# 計画: テスト
+
+## セクション1
+内容1
+
+---
+
+## セクション2
+内容2
+`;
+
+    const result = parsePlanFromInput(plan);
+
+    expect(result).not.toBeNull();
+    expect(result!.body).toContain("## セクション1");
+    expect(result!.body).toContain("## セクション2");
   });
 });
 
