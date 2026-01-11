@@ -135,6 +135,8 @@ claude-agent/
 │   │   ├── plan-issue.ts  # plan-issue用プロンプト
 │   │   ├── issue-apply.ts # issue-apply用プロンプト
 │   │   └── skills.ts      # スキルローダー
+│   ├── hooks/
+│   │   └── create-issue.ts # Issue自動作成hook
 │   └── types/
 │       └── index.ts       # 型定義エクスポート
 ├── skills/                # agentスキル定義
@@ -143,6 +145,9 @@ claude-agent/
 │   └── optional/
 │       ├── issue-template.md
 │       └── pr-draft.md
+├── .claude/               # Claude Code hooks設定
+│   ├── settings.json      # hooks設定
+│   └── hooks/             # hookスクリプト
 └── logs/                  # 実行ログ（自動生成）
 ```
 
@@ -159,6 +164,34 @@ logs/issue-apply/20240115-120000-12345/
 ├── pr.json            # 作成したPR情報
 └── prompt.txt         # 使用したプロンプト
 ```
+
+## Claude Code Hooks
+
+plan-issueコマンドで計画が承認されると、自動的にGitHub Issueを作成するhookが設定されています。
+
+### hookの仕組み
+
+`.claude/settings.json`でExitPlanMode実行時にhookスクリプトを呼び出す設定がされています。
+
+```json
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "ExitPlanMode",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/create-issue.sh"
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+hookは`src/hooks/create-issue.ts`を実行し、会話トランスクリプトから`# 計画:`で始まる計画を抽出してIssueを作成します。
 
 ## 環境変数
 

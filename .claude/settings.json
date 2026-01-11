@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "ExitPlanMode",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/tkg-engineer/claudecode/claude-agent/.claude/hooks/create-issue.sh",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
+  }
+}

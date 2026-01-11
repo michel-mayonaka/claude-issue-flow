@@ -25,6 +25,7 @@ src/
 ├── commands/          # CLIコマンド実装
 ├── core/              # コア機能（agent, github, worktree, logger）
 ├── prompts/           # プロンプトテンプレート
+├── hooks/             # Claude Code hooks用スクリプト
 └── types/             # 型定義
 skills/                # agentスキル定義
 ```
