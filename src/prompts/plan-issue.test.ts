@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { buildPlanIssuePrompt, parseIssueYaml } from "./plan-issue.js";
+import { buildPlanIssuePrompt, parsePlanMarkdown } from "./plan-issue.js";
 
 describe("buildPlanIssuePrompt", () => {
   it("should build prompt with request only", () => {
@@ -8,8 +8,9 @@ describe("buildPlanIssuePrompt", () => {
     });
 
     expect(result).toContain("Add a new feature");
-    expect(result).toContain("# タスク: 実装計画とIssue作成");
+    expect(result).toContain("# タスク: 対話的な実装計画の立案");
     expect(result).toContain("## 依頼内容");
+    expect(result).toContain("AskUserQuestion");
     expect(result).not.toContain("## 追加コンテキスト");
   });
 
@@ -24,138 +25,101 @@ describe("buildPlanIssuePrompt", () => {
   });
 });
 
-describe("parseIssueYaml", () => {
-  it("should parse a single issue YAML block", () => {
+describe("parsePlanMarkdown", () => {
+  it("should parse plan from markdown code block", () => {
     const content = `
 Here is the plan:
 
-\`\`\`yaml
-title: "Add user authentication"
-body: |
-  ## 背景
-  Users need to log in.
+\`\`\`markdown
+# 計画: ユーザー認証機能の追加
 
-  ## 目的
-  Implement login functionality.
+## 概要
+ログイン機能を実装する。
 
-  ## 受け入れ条件
-  - [ ] Login form works
-labels:
-  - enhancement
-assignees: []
+## 背景
+ユーザーがログインする必要がある。
+
+## 変更対象
+- \`src/auth.ts\`: 認証ロジック
+
+## 実装ステップ
+1. ログインフォームの作成
+2. APIエンドポイントの追加
+
+## 受け入れ条件
+- [ ] ログインフォームが動作する
 \`\`\`
 `;
 
-    const result = parseIssueYaml(content);
+    const result = parsePlanMarkdown(content);
 
-    expect(result).toHaveLength(1);
-    expect(result[0].title).toBe("Add user authentication");
-    expect(result[0].body).toContain("## 背景");
-    expect(result[0].body).toContain("Users need to log in.");
-    expect(result[0].labels).toEqual(["enhancement"]);
-    expect(result[0].assignees).toEqual([]);
+    expect(result).not.toBeNull();
+    expect(result!.title).toBe("ユーザー認証機能の追加");
+    expect(result!.body).toContain("## 概要");
+    expect(result!.body).toContain("ログイン機能を実装する");
+    expect(result!.body).toContain("## 変更対象");
   });
 
-  it("should parse multiple issue YAML blocks", () => {
+  it("should parse plan without markdown code block", () => {
     const content = `
-\`\`\`yaml
-title: "Issue 1"
-body: |
-  First issue body
-labels:
-  - bug
-assignees: []
-\`\`\`
+調査が完了しました。以下が計画です：
 
-\`\`\`yaml
-title: "Issue 2"
-body: |
-  Second issue body
-labels:
-  - enhancement
-  - documentation
-assignees:
-  - user1
-\`\`\`
+# 計画: リファクタリング
+
+## 概要
+コードを整理する。
+
+## 変更対象
+- \`src/index.ts\`: エントリーポイント
 `;
 
-    const result = parseIssueYaml(content);
+    const result = parsePlanMarkdown(content);
 
-    expect(result).toHaveLength(2);
-    expect(result[0].title).toBe("Issue 1");
-    expect(result[0].labels).toEqual(["bug"]);
-    expect(result[1].title).toBe("Issue 2");
-    expect(result[1].labels).toEqual(["enhancement", "documentation"]);
-    expect(result[1].assignees).toEqual(["user1"]);
+    expect(result).not.toBeNull();
+    expect(result!.title).toBe("リファクタリング");
+    expect(result!.body).toContain("## 概要");
+    expect(result!.body).toContain("コードを整理する");
   });
 
-  it("should handle title with quotes", () => {
+  it("should return null when no plan found", () => {
+    const content = "Just some text without a plan";
+
+    const result = parsePlanMarkdown(content);
+
+    expect(result).toBeNull();
+  });
+
+  it("should handle Plan: prefix (English)", () => {
     const content = `
-\`\`\`yaml
-title: 'Quoted title'
-body: |
-  Body content
-labels: []
-assignees: []
+\`\`\`markdown
+# Plan: Add authentication
+
+## Overview
+Add user login.
 \`\`\`
 `;
 
-    const result = parseIssueYaml(content);
+    const result = parsePlanMarkdown(content);
 
-    expect(result).toHaveLength(1);
-    expect(result[0].title).toBe("Quoted title");
+    expect(result).not.toBeNull();
+    expect(result!.title).toBe("Add authentication");
+    expect(result!.body).toContain("## Overview");
   });
 
-  it("should return empty array when no YAML blocks found", () => {
-    const content = "Just some text without YAML";
-
-    const result = parseIssueYaml(content);
-
-    expect(result).toEqual([]);
-  });
-
-  it("should handle body with code blocks", () => {
+  it("should handle empty title gracefully", () => {
     const content = `
-\`\`\`yaml
-title: "Issue with code"
-body: |
-  ## 実装方針
+\`\`\`markdown
+# 計画:
 
-  Use the following pattern:
-
-  - Step 1
-  - Step 2
-labels:
-  - enhancement
-assignees: []
+## 概要
+Something
 \`\`\`
 `;
 
-    const result = parseIssueYaml(content);
+    const result = parsePlanMarkdown(content);
 
-    expect(result).toHaveLength(1);
-    expect(result[0].body).toContain("## 実装方針");
-    expect(result[0].body).toContain("- Step 1");
-  });
-
-  it("should strip indentation from body", () => {
-    const content = `
-\`\`\`yaml
-title: "Test indentation"
-body: |
-  First line
-  Second line
-    Indented line
-labels: []
-assignees: []
-\`\`\`
-`;
-
-    const result = parseIssueYaml(content);
-
-    expect(result).toHaveLength(1);
-    expect(result[0].body).toBe(
-      "First line\nSecond line\n  Indented line"
-    );
+    // markdownブロック内に "# 計画:" があっても、タイトルが空の場合はフォールバック
+    // 実際には "## 概要" が最初の行として取得される（空行がスキップされる）
+    expect(result).not.toBeNull();
   });
 });

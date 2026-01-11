@@ -127,6 +127,14 @@ describe("github", () => {
       delete process.env.GH_TOKEN;
       delete process.env.GITHUB_TOKEN;
 
+      // Mock gh auth token to fail
+      (execSync as ReturnType<typeof vi.fn>).mockImplementation((cmd: string) => {
+        if (cmd === "gh auth token") {
+          throw new Error("not logged in");
+        }
+        return "https://github.com/owner/repo.git\n";
+      });
+
       await expect(fetchIssue("/repo", 1)).rejects.toThrow("GitHub token not found");
     });
 

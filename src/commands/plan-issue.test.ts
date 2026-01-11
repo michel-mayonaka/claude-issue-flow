@@ -18,6 +18,18 @@ import { planIssue } from "./plan-issue.js";
 import { runAgent, extractFinalMessage } from "../core/agent.js";
 import { createIssue } from "../core/github.js";
 
+// Helper to create mock assistant message with plan content
+function createMockMessages(planContent: string) {
+  return [
+    {
+      type: "assistant",
+      message: {
+        content: [{ text: planContent }],
+      },
+    },
+  ];
+}
+
 describe("planIssue", () => {
   let testDir: string;
 
@@ -53,32 +65,34 @@ describe("planIssue", () => {
     const requestFile = join(testDir, "request.txt");
     await writeFile(requestFile, "Implement feature X");
 
+    const planContent = `
+\`\`\`markdown
+# 計画: Feature X
+
+## 概要
+Need feature X
+
+## 変更対象
+- \`src/feature.ts\`: 新機能追加
+\`\`\`
+`;
+
     (runAgent as ReturnType<typeof vi.fn>).mockResolvedValue({
       success: true,
-      messages: [],
+      messages: createMockMessages(planContent),
       numTurns: 1,
       costUSD: 0.01,
       durationMs: 1000,
     });
 
-    (extractFinalMessage as ReturnType<typeof vi.fn>).mockReturnValue(`
-\`\`\`yaml
-title: "Feature X"
-body: |
-  ## 背景
-  Need feature X
-labels:
-  - enhancement
-assignees: []
-\`\`\`
-`);
+    (extractFinalMessage as ReturnType<typeof vi.fn>).mockReturnValue(planContent);
 
     (createIssue as ReturnType<typeof vi.fn>).mockResolvedValue({
       number: 1,
       title: "Feature X",
-      body: "## 背景\nNeed feature X",
+      body: "## 概要\nNeed feature X",
       url: "https://github.com/owner/repo/issues/1",
-      labels: ["enhancement"],
+      labels: [],
       assignees: [],
       milestone: null,
       state: "open",
@@ -93,28 +107,30 @@ assignees: []
       expect.objectContaining({
         prompt: expect.stringContaining("Implement feature X"),
         permissionMode: "plan",
+        allowedTools: expect.arrayContaining(["AskUserQuestion"]),
       })
     );
   });
 
   it("should use request string when provided", async () => {
+    const planContent = `
+\`\`\`markdown
+# 計画: New Feature
+
+## 概要
+Content
+\`\`\`
+`;
+
     (runAgent as ReturnType<typeof vi.fn>).mockResolvedValue({
       success: true,
-      messages: [],
+      messages: createMockMessages(planContent),
       numTurns: 1,
       costUSD: 0.01,
       durationMs: 1000,
     });
 
-    (extractFinalMessage as ReturnType<typeof vi.fn>).mockReturnValue(`
-\`\`\`yaml
-title: "New Feature"
-body: |
-  Content
-labels: []
-assignees: []
-\`\`\`
-`);
+    (extractFinalMessage as ReturnType<typeof vi.fn>).mockReturnValue(planContent);
 
     (createIssue as ReturnType<typeof vi.fn>).mockResolvedValue({
       number: 2,
@@ -153,17 +169,17 @@ assignees: []
     ).rejects.toThrow("Agent execution failed");
   });
 
-  it("should throw error when no issue YAML found", async () => {
+  it("should throw error when no plan found", async () => {
     (runAgent as ReturnType<typeof vi.fn>).mockResolvedValue({
       success: true,
-      messages: [],
+      messages: createMockMessages("No plan content here"),
       numTurns: 1,
       costUSD: 0.01,
       durationMs: 1000,
     });
 
     (extractFinalMessage as ReturnType<typeof vi.fn>).mockReturnValue(
-      "No YAML content here"
+      "No plan content here"
     );
 
     await expect(
@@ -171,28 +187,28 @@ assignees: []
         repo: testDir,
         request: "Some request",
       })
-    ).rejects.toThrow("No valid issue YAML found in agent output");
+    ).rejects.toThrow("No valid plan found in agent output");
   });
 
   it("should skip issue creation in dry run mode", async () => {
+    const planContent = `
+\`\`\`markdown
+# 計画: Dry Run Issue
+
+## 概要
+Test content
+\`\`\`
+`;
+
     (runAgent as ReturnType<typeof vi.fn>).mockResolvedValue({
       success: true,
-      messages: [],
+      messages: createMockMessages(planContent),
       numTurns: 1,
       costUSD: 0.01,
       durationMs: 1000,
     });
 
-    (extractFinalMessage as ReturnType<typeof vi.fn>).mockReturnValue(`
-\`\`\`yaml
-title: "Dry Run Issue"
-body: |
-  Test content
-labels:
-  - test
-assignees: []
-\`\`\`
-`);
+    (extractFinalMessage as ReturnType<typeof vi.fn>).mockReturnValue(planContent);
 
     const result = await planIssue({
       repo: testDir,
@@ -204,86 +220,25 @@ assignees: []
     expect(result.issues).toHaveLength(0);
   });
 
-  it("should create multiple issues from output", async () => {
-    (runAgent as ReturnType<typeof vi.fn>).mockResolvedValue({
-      success: true,
-      messages: [],
-      numTurns: 1,
-      costUSD: 0.02,
-      durationMs: 2000,
-    });
-
-    (extractFinalMessage as ReturnType<typeof vi.fn>).mockReturnValue(`
-\`\`\`yaml
-title: "Issue 1"
-body: |
-  First issue
-labels:
-  - bug
-assignees: []
-\`\`\`
-
-\`\`\`yaml
-title: "Issue 2"
-body: |
-  Second issue
-labels:
-  - enhancement
-assignees: []
-\`\`\`
-`);
-
-    (createIssue as ReturnType<typeof vi.fn>)
-      .mockResolvedValueOnce({
-        number: 10,
-        title: "Issue 1",
-        body: "First issue",
-        url: "https://github.com/owner/repo/issues/10",
-        labels: ["bug"],
-        assignees: [],
-        milestone: null,
-        state: "open",
-      })
-      .mockResolvedValueOnce({
-        number: 11,
-        title: "Issue 2",
-        body: "Second issue",
-        url: "https://github.com/owner/repo/issues/11",
-        labels: ["enhancement"],
-        assignees: [],
-        milestone: null,
-        state: "open",
-      });
-
-    const result = await planIssue({
-      repo: testDir,
-      request: "Create multiple issues",
-    });
-
-    expect(createIssue).toHaveBeenCalledTimes(2);
-    expect(result.issues).toHaveLength(2);
-    expect(result.issues[0].number).toBe(10);
-    expect(result.issues[1].number).toBe(11);
-  });
-
   it("should use specified model", async () => {
+    const planContent = `
+\`\`\`markdown
+# 計画: Test
+
+## 概要
+Content
+\`\`\`
+`;
+
     (runAgent as ReturnType<typeof vi.fn>).mockResolvedValue({
       success: true,
-      messages: [],
+      messages: createMockMessages(planContent),
       numTurns: 1,
       costUSD: 0.01,
       durationMs: 1000,
     });
 
-    (extractFinalMessage as ReturnType<typeof vi.fn>).mockReturnValue(`
-\`\`\`yaml
-title: "Test"
-body: |
-  Content
-labels: []
-assignees: []
-\`\`\`
-`);
+    (extractFinalMessage as ReturnType<typeof vi.fn>).mockReturnValue(planContent);
 
     (createIssue as ReturnType<typeof vi.fn>).mockResolvedValue({
       number: 1,
@@ -310,23 +265,24 @@ assignees: []
   });
 
   it("should return logDir in result", async () => {
+    const planContent = `
+\`\`\`markdown
+# 計画: Test
+
+## 概要
+Content
+\`\`\`
+`;
+
     (runAgent as ReturnType<typeof vi.fn>).mockResolvedValue({
       success: true,
-      messages: [],
+      messages: createMockMessages(planContent),
       numTurns: 1,
       costUSD: 0.01,
       durationMs: 1000,
     });
 
-    (extractFinalMessage as ReturnType<typeof vi.fn>).mockReturnValue(`
-\`\`\`yaml
-title: "Test"
-body: |
-  Content
-labels: []
-assignees: []
-\`\`\`
-`);
+    (extractFinalMessage as ReturnType<typeof vi.fn>).mockReturnValue(planContent);
 
     (createIssue as ReturnType<typeof vi.fn>).mockResolvedValue({
       number: 1,

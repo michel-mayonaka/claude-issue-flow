@@ -5,7 +5,7 @@ import { createIssue, type GitHubIssue } from "../core/github.js";
 import { ExecutionLogger, generateRunId } from "../core/logger.js";
 import {
   buildPlanIssuePrompt,
-  parseIssueYaml,
+  parsePlanMarkdown,
 } from "../prompts/plan-issue.js";
 
 export interface PlanIssueOptions {
@@ -56,7 +56,7 @@ export async function planIssue(
     cwd: repoPath,
     model: options.model ?? "claude-opus-4-5-20251101",
     permissionMode: "plan",
-    allowedTools: ["Read", "Glob", "Grep", "WebSearch", "WebFetch"],
+    allowedTools: ["Read", "Glob", "Grep", "WebSearch", "WebFetch", "AskUserQuestion"],
     logger,
   });
 
@@ -72,41 +72,45 @@ export async function planIssue(
     throw new Error("Agent execution failed");
   }
 
-  // Extract final message and parse issues
+  // Extract final message and parse plan
   const finalMessage = extractFinalMessage(result.messages);
   await logger.saveJson("final_message.txt", finalMessage);
 
-  const issueDataList = parseIssueYaml(finalMessage);
+  // 全メッセージからMarkdown計画を探す
+  const allText = result.messages
+    .filter((m) => m.type === "assistant")
+    .map((m) => {
+      const content = (m as { message: { content: Array<{ text?: string }> } }).message.content;
+      return content.map((c) => c.text || "").join("\n");
+    })
+    .join("\n\n");
 
-  if (issueDataList.length === 0) {
-    await logger.error("No valid issue YAML found in agent output");
-    throw new Error("No valid issue YAML found in agent output");
+  const planData = parsePlanMarkdown(allText);
+
+  if (!planData) {
+    await logger.error("No valid plan found in agent output");
+    throw new Error("No valid plan found in agent output");
   }
 
-  await logger.info(`Found ${issueDataList.length} issue(s) to create`);
+  await logger.info(`Found plan: ${planData.title}`);
 
-  // Create issues
+  // Create issue
   const createdIssues: GitHubIssue[] = [];
 
-  for (const issueData of issueDataList) {
-    await logger.info(`Processing issue: ${issueData.title}`);
+  await logger.info(`Processing plan: ${planData.title}`);
 
-    if (options.dryRun) {
-      await logger.info("Dry run - skipping issue creation");
-      console.log("\n--- Issue (dry run) ---");
-      console.log(`Title: ${issueData.title}`);
-      console.log(`Labels: ${issueData.labels.join(", ")}`);
-      console.log(`Body:\n${issueData.body}`);
-      console.log("------------------------\n");
-      continue;
-    }
-
+  if (options.dryRun) {
+    await logger.info("Dry run - skipping issue creation");
+    console.log("\n--- Issue (dry run) ---");
+    console.log(`Title: ${planData.title}`);
+    console.log(`Body:\n${planData.body}`);
+    console.log("------------------------\n");
+  } else {
     try {
       const issue = await createIssue(repoPath, {
-        title: issueData.title,
-        body: issueData.body,
-        labels: issueData.labels,
-        assignees: issueData.assignees,
+        title: planData.title,
+        body: planData.body,
+        labels: [],
       });
 
       createdIssues.push(issue);
