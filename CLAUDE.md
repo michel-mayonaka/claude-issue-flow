@@ -17,6 +17,16 @@ Claude Code Agent SDKを使用したGitHub Issue駆動ワークフローCLIツ�
 - Commander.js (CLI)
 - Vitest (テスト)
 
+## Context7 MCPの使用
+
+以下のライブラリのAPI・使い方を調べる際はContext7で最新ドキュメントを取得すること：
+
+- `@anthropic-ai/claude-code` (Agent SDK)
+- `octokit` (GitHub API)
+- `vitest`
+- `commander`
+- `simple-git`
+
 ## ディレクトリ構成
 
 ```

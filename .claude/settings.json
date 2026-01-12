@@ -1,4 +1,24 @@
 {
+  "permissions": {
+    "allow": [
+      "Bash",
+      "Read",
+      "Write",
+      "Edit",
+      "Glob",
+      "Grep",
+      "WebFetch",
+      "WebSearch",
+      "Task",
+      "TodoWrite",
+      "NotebookEdit"
+    ],
+    "deny": [
+      "Bash(rm -rf /)",
+      "Bash(git push --force origin main)",
+      "Bash(git push --force origin master)"
+    ]
+  },
   "hooks": {
     "PostToolUse": [
       {
