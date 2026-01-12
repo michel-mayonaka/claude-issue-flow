@@ -39,8 +39,8 @@ export interface IssueApplyResult {
 }
 
 const MODEL_MAP = {
-  haiku: "claude-haiku-3-5-20241022",
-  sonnet: "claude-sonnet-4-5-20250514",
+  haiku: "claude-3-5-haiku-20241022",
+  sonnet: "claude-sonnet-4-20250514",
 };
 
 export async function issueApply(
