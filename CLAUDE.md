@@ -36,10 +36,11 @@ Claude Code Agent SDKを使用したGitHub Issue駆動ワークフローツー�
 └── settings.json      # Claude Code設定
 src/
 ├── index.ts           # CLIエントリーポイント
-├── commands/          # CLIコマンド実装（issue-apply）
-├── core/              # コア機能（agent, github, worktree, logger）
+├── commands/          # CLIコマンド実装（issue-apply, plan-issue）
+├── core/              # コア機能（agent, github, worktree, logger, retry）
+├── hooks/             # Claude Code hooks実装
 ├── prompts/           # プロンプトテンプレート
-└── types/             # 型定義
+└── types/             # 型定義（エラークラス含む）
 skills/                # agentスキル定義
 ```
 

@@ -78,6 +78,38 @@ function getOctokit(): Octokit {
   return new Octokit({ auth: getGitHubToken() });
 }
 
+function wrapOctokitError(error: unknown, message: string): GitHubAPIError {
+  // Already a GitHubAPIError, just re-throw
+  if (error instanceof GitHubAPIError) {
+    return error;
+  }
+
+  // Octokit error with status code
+  if (isOctokitError(error)) {
+    return new GitHubAPIError(`${message}: ${error.message}`, {
+      statusCode: error.status,
+      cause: error instanceof Error ? error : undefined,
+    });
+  }
+
+  // Generic error
+  if (error instanceof Error) {
+    return new GitHubAPIError(`${message}: ${error.message}`, {
+      cause: error,
+    });
+  }
+
+  return new GitHubAPIError(message, {});
+}
+
+function isOctokitError(error: unknown): error is Error & { status: number; message: string } {
+  return (
+    error instanceof Error &&
+    "status" in error &&
+    typeof (error as { status: unknown }).status === "number"
+  );
+}
+
 export async function fetchIssue(
   repoPath: string,
   issueRef: string | number
@@ -98,25 +130,29 @@ export async function fetchIssue(
       typeof issueRef === "number" ? issueRef : parseInt(issueRef, 10);
   }
 
-  const { data } = await withRetry(
-    () => octokit.issues.get({
-      owner,
-      repo,
-      issue_number: issueNumber,
-    }),
-    { maxAttempts: 3 }
-  );
+  try {
+    const { data } = await withRetry(
+      () => octokit.issues.get({
+        owner,
+        repo,
+        issue_number: issueNumber,
+      }),
+      { maxAttempts: 3 }
+    );
 
-  return {
-    number: data.number,
-    title: data.title,
-    body: data.body || "",
-    url: data.html_url,
-    labels: data.labels.map((l) => (typeof l === "string" ? l : l.name || "")),
-    assignees: data.assignees?.map((a) => a.login) || [],
-    milestone: data.milestone?.title || null,
-    state: data.state,
-  };
+    return {
+      number: data.number,
+      title: data.title,
+      body: data.body || "",
+      url: data.html_url,
+      labels: data.labels.map((l) => (typeof l === "string" ? l : l.name || "")),
+      assignees: data.assignees?.map((a) => a.login) || [],
+      milestone: data.milestone?.title || null,
+      state: data.state,
+    };
+  } catch (error) {
+    throw wrapOctokitError(error, `Issue #${issueNumber} の取得に失敗しました`);
+  }
 }
 
 export async function createIssue(
@@ -126,31 +162,35 @@ export async function createIssue(
   const octokit = getOctokit();
   const { owner, repo } = getRepoInfo(repoPath);
 
-  const { data: created } = await withRetry(
-    () => octokit.issues.create({
-      owner,
-      repo,
-      title: data.title,
-      body: data.body,
-      labels: data.labels,
-      assignees: data.assignees,
-      milestone: data.milestone,
-    }),
-    { maxAttempts: 3 }
-  );
+  try {
+    const { data: created } = await withRetry(
+      () => octokit.issues.create({
+        owner,
+        repo,
+        title: data.title,
+        body: data.body,
+        labels: data.labels,
+        assignees: data.assignees,
+        milestone: data.milestone,
+      }),
+      { maxAttempts: 3 }
+    );
 
-  return {
-    number: created.number,
-    title: created.title,
-    body: created.body || "",
-    url: created.html_url,
-    labels: created.labels.map((l) =>
-      typeof l === "string" ? l : l.name || ""
-    ),
-    assignees: created.assignees?.map((a) => a.login) || [],
-    milestone: created.milestone?.title || null,
-    state: created.state,
-  };
+    return {
+      number: created.number,
+      title: created.title,
+      body: created.body || "",
+      url: created.html_url,
+      labels: created.labels.map((l) =>
+        typeof l === "string" ? l : l.name || ""
+      ),
+      assignees: created.assignees?.map((a) => a.login) || [],
+      milestone: created.milestone?.title || null,
+      state: created.state,
+    };
+  } catch (error) {
+    throw wrapOctokitError(error, "Issueの作成に失敗しました");
+  }
 }
 
 export async function createPullRequest(
@@ -160,24 +200,28 @@ export async function createPullRequest(
   const octokit = getOctokit();
   const { owner, repo } = getRepoInfo(repoPath);
 
-  const { data: pr } = await withRetry(
-    () => octokit.pulls.create({
-      owner,
-      repo,
-      title: data.title,
-      body: data.body,
-      head: data.head,
-      base: data.base,
-      draft: data.draft ?? true,
-    }),
-    { maxAttempts: 3 }
-  );
+  try {
+    const { data: pr } = await withRetry(
+      () => octokit.pulls.create({
+        owner,
+        repo,
+        title: data.title,
+        body: data.body,
+        head: data.head,
+        base: data.base,
+        draft: data.draft ?? true,
+      }),
+      { maxAttempts: 3 }
+    );
 
-  return {
-    number: pr.number,
-    url: pr.html_url,
-    title: pr.title,
-  };
+    return {
+      number: pr.number,
+      url: pr.html_url,
+      title: pr.title,
+    };
+  } catch (error) {
+    throw wrapOctokitError(error, "Pull Requestの作成に失敗しました");
+  }
 }
 
 export function issueToYaml(issue: GitHubIssue): string {
