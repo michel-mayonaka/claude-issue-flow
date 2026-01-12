@@ -24,7 +24,7 @@ import {
 export interface IssueApplyOptions {
   issue: string | number;
   repo: string;
-  model?: "haiku" | "sonnet";
+  model?: "haiku" | "sonnet" | "opus";
   draft?: boolean;
   skipPr?: boolean;
 }
@@ -40,7 +40,8 @@ export interface IssueApplyResult {
 
 const MODEL_MAP = {
   haiku: "claude-3-5-haiku-20241022",
-  sonnet: "claude-sonnet-4-20250514",
+  sonnet: "claude-sonnet-4-5-20250929",
+  opus: "claude-opus-4-5-20251101",
 };
 
 export async function issueApply(

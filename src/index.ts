@@ -50,10 +50,10 @@ program
 
 program
   .command("issue-apply")
-  .description("Implement a GitHub Issue using Haiku/Sonnet model")
+  .description("Implement a GitHub Issue using Haiku/Sonnet/Opus model")
   .requiredOption("-i, --issue <ref>", "Issue number or URL")
   .option("--repo <path>", "Target repository path", process.cwd())
-  .option("-m, --model <model>", "Model to use (haiku or sonnet)", "haiku")
+  .option("-m, --model <model>", "Model to use (haiku, sonnet, or opus)", "haiku")
   .option("--draft", "Create PR as draft", true)
   .option("--no-draft", "Create PR as ready for review")
   .option("--skip-pr", "Skip PR creation")
@@ -62,7 +62,7 @@ program
       const result = await issueApply({
         issue: opts.issue,
         repo: opts.repo,
-        model: opts.model as "haiku" | "sonnet",
+        model: opts.model as "haiku" | "sonnet" | "opus",
         draft: opts.draft,
         skipPr: opts.skipPr,
       });

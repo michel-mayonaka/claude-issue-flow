@@ -5,7 +5,7 @@
 Claude Code Agent SDKを使用したGitHub Issue駆動ワークフローツール。
 
 - `/plan-issue`: Claude Codeのカスタムコマンド。Opusモデルで計画を立案し、ExitPlanMode後にGitHub Issueを自動作成
-- `issue-apply`: CLIツール。Haiku/SonnetモデルでIssueを実装しPRを作成
+- `issue-apply`: CLIツール。Haiku/Sonnet/OpusモデルでIssueを実装しPRを作成
 
 ## 技術スタック
 

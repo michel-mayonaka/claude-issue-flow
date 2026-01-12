@@ -153,7 +153,7 @@ pr_body: |
 
     expect(runAgent).toHaveBeenCalledWith(
       expect.objectContaining({
-        model: "claude-sonnet-4-20250514",
+        model: "claude-sonnet-4-5-20250929",
       })
     );
   });
