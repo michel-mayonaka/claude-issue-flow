@@ -137,7 +137,7 @@ pr_body: |
 
     expect(runAgent).toHaveBeenCalledWith(
       expect.objectContaining({
-        model: "claude-haiku-3-5-20241022",
+        model: "claude-3-5-haiku-20241022",
         permissionMode: "bypassPermissions",
         maxTurns: 500,
       })
@@ -153,7 +153,7 @@ pr_body: |
 
     expect(runAgent).toHaveBeenCalledWith(
       expect.objectContaining({
-        model: "claude-sonnet-4-5-20250514",
+        model: "claude-sonnet-4-20250514",
       })
     );
   });
