@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { buildPlanIssuePrompt, parsePlanMarkdown } from "./plan-issue.js";
+import { buildPlanIssuePrompt } from "./plan-issue.js";
+import { parsePlanMarkdown } from "../core/parsing.js";
 
 describe("buildPlanIssuePrompt", () => {
   it("should build prompt with request only", () => {
