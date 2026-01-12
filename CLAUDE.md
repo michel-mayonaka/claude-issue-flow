@@ -2,10 +2,10 @@
 
 ## プロジェクト概要
 
-Claude Code Agent SDKを使用したGitHub Issue駆動ワークフローCLIツール。
+Claude Code Agent SDKを使用したGitHub Issue駆動ワークフローツール。
 
-- `plan-issue`: Opusモデルで計画を立案しGitHub Issueを作成
-- `issue-apply`: Haiku/SonnetモデルでIssueを実装しPRを作成
+- `/plan-issue`: Claude Codeのカスタムコマンド。Opusモデルで計画を立案し、ExitPlanMode後にGitHub Issueを自動作成
+- `issue-apply`: CLIツール。Haiku/SonnetモデルでIssueを実装しPRを作成
 
 ## 技術スタック
 
@@ -30,12 +30,15 @@ Claude Code Agent SDKを使用したGitHub Issue駆動ワークフローCLIツ�
 ## ディレクトリ構成
 
 ```
+.claude/
+├── commands/          # Claude Codeカスタムコマンド（/plan-issue, /commit）
+├── hooks/             # Claude Code hooks
+└── settings.json      # Claude Code設定
 src/
 ├── index.ts           # CLIエントリーポイント
-├── commands/          # CLIコマンド実装
+├── commands/          # CLIコマンド実装（issue-apply）
 ├── core/              # コア機能（agent, github, worktree, logger）
 ├── prompts/           # プロンプトテンプレート
-├── hooks/             # Claude Code hooks用スクリプト
 └── types/             # 型定義
 skills/                # agentスキル定義
 ```
@@ -46,9 +49,9 @@ skills/                # agentスキル定義
 # ビルド
 npm run build
 
-# 開発モード実行
-npm run dev -- plan-issue --request "テスト" --dry-run
+# issue-apply（CLIツール）
 npm run dev -- issue-apply --issue 123 --skip-pr
+npm run dev -- issue-apply --issue 123 --model sonnet
 
 # テスト
 npm test
@@ -56,6 +59,16 @@ npm run test:watch
 
 # 型チェック
 npm run typecheck
+```
+
+### Claude Codeカスタムコマンド
+
+```bash
+# 計画立案（Claude Code内で実行）
+/plan-issue 新機能の実装依頼...
+
+# コミット（Claude Code内で実行）
+/commit
 ```
 
 ## 必須環境変数
