@@ -24,8 +24,8 @@ export async function loadSkills(options: LoadSkillsOptions): Promise<string> {
         const content = await readFile(join(globalDir, file), "utf-8");
         parts.push(`## skill: skills/global/${file}\n\n${content}`);
       }
-    } catch {
-      // Global skills directory may not exist
+    } catch (error) {
+      console.warn(`Failed to load global skills: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -52,53 +52,11 @@ export async function loadSkills(options: LoadSkillsOptions): Promise<string> {
         }
 
         parts.push(`## skill: ${skillPath}\n\n${content}`);
-      } catch {
-        console.warn(`Warning: Could not load skill "${name}"`);
+      } catch (error) {
+        console.warn(`Failed to load skill "${name}": ${error instanceof Error ? error.message : String(error)}`);
       }
     }
   }
 
   return parts.join("\n\n");
-}
-
-export async function listAvailableSkills(): Promise<{
-  global: string[];
-  optional: string[];
-}> {
-  const result = { global: [] as string[], optional: [] as string[] };
-
-  // List global skills
-  try {
-    const globalDir = join(SKILLS_ROOT, "global");
-    const files = await readdir(globalDir);
-    result.global = files
-      .filter((f) => f.endsWith(".md"))
-      .map((f) => f.replace(".md", ""));
-  } catch {
-    // Directory may not exist
-  }
-
-  // List optional skills
-  try {
-    const optionalDir = join(SKILLS_ROOT, "optional");
-    const entries = await readdir(optionalDir, { withFileTypes: true });
-
-    for (const entry of entries) {
-      if (entry.isFile() && entry.name.endsWith(".md")) {
-        result.optional.push(entry.name.replace(".md", ""));
-      } else if (entry.isDirectory()) {
-        // Check if directory has SKILL.md
-        try {
-          await readFile(join(optionalDir, entry.name, "SKILL.md"), "utf-8");
-          result.optional.push(entry.name);
-        } catch {
-          // Not a valid skill directory
-        }
-      }
-    }
-  } catch {
-    // Directory may not exist
-  }
-
-  return result;
 }
