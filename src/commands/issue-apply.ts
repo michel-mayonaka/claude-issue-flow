@@ -21,6 +21,7 @@ import {
   parsePRInfo,
   generateDefaultPRBody,
 } from "../prompts/issue-apply.js";
+import { AgentExecutionError, AppError } from "../types/index.js";
 
 export interface IssueApplyOptions {
   issue: string | number;
@@ -121,7 +122,7 @@ export async function issueApply(
 
   if (!result.success) {
     await logger.error("Agent execution failed");
-    throw new Error("Agent execution failed");
+    throw new AgentExecutionError("Issue実装エージェントの実行に失敗しました");
   }
 
   // 6. Get changed files

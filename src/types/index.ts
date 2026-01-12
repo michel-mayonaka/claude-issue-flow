@@ -20,3 +20,5 @@ export interface HookInput {
   cwd: string;
   [key: string]: unknown;
 }
+
+export * from "./errors.js";

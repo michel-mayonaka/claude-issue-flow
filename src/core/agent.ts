@@ -7,6 +7,7 @@ import {
   type PermissionMode,
 } from "@anthropic-ai/claude-code";
 import { ExecutionLogger } from "./logger.js";
+import { AgentExecutionError } from "../types/errors.js";
 
 export interface AgentOptions {
   prompt: string;
@@ -28,49 +29,56 @@ export interface AgentResult {
 }
 
 export async function runAgent(options: AgentOptions): Promise<AgentResult> {
-  const queryOptions: Options = {
-    cwd: options.cwd,
-    model: options.model,
-    permissionMode: options.permissionMode ?? "default",
-    allowedTools: options.allowedTools,
-    maxTurns: options.maxTurns ?? 500,
-  };
+  try {
+    const queryOptions: Options = {
+      cwd: options.cwd,
+      model: options.model,
+      permissionMode: options.permissionMode ?? "default",
+      allowedTools: options.allowedTools,
+      maxTurns: options.maxTurns ?? 500,
+    };
 
-  const messages: SDKMessage[] = [];
-  let result: AgentResult = {
-    success: false,
-    result: "",
-    numTurns: 0,
-    costUSD: 0,
-    durationMs: 0,
-    messages: [],
-  };
+    const messages: SDKMessage[] = [];
+    let result: AgentResult = {
+      success: false,
+      result: "",
+      numTurns: 0,
+      costUSD: 0,
+      durationMs: 0,
+      messages: [],
+    };
 
-  const response = query({ prompt: options.prompt, options: queryOptions });
+    const response = query({ prompt: options.prompt, options: queryOptions });
 
-  for await (const message of response) {
-    messages.push(message);
+    for await (const message of response) {
+      messages.push(message);
 
-    // Log message if logger is provided
-    if (options.logger) {
-      await options.logger.logMessage(message);
+      // Log message if logger is provided
+      if (options.logger) {
+        await options.logger.logMessage(message);
+      }
+
+      // Handle different message types
+      if (message.type === "result") {
+        const resultMsg = message as SDKResultMessage;
+        result = {
+          success: resultMsg.subtype === "success",
+          result: "result" in resultMsg ? resultMsg.result : "",
+          numTurns: resultMsg.num_turns,
+          costUSD: resultMsg.total_cost_usd,
+          durationMs: resultMsg.duration_ms,
+          messages,
+        };
+      }
     }
 
-    // Handle different message types
-    if (message.type === "result") {
-      const resultMsg = message as SDKResultMessage;
-      result = {
-        success: resultMsg.subtype === "success",
-        result: "result" in resultMsg ? resultMsg.result : "",
-        numTurns: resultMsg.num_turns,
-        costUSD: resultMsg.total_cost_usd,
-        durationMs: resultMsg.duration_ms,
-        messages,
-      };
-    }
+    return result;
+  } catch (error) {
+    throw new AgentExecutionError(
+      "エージェントの実行に失敗しました",
+      { cause: error instanceof Error ? error : undefined }
+    );
   }
-
-  return result;
 }
 
 export function extractTextFromMessages(messages: SDKMessage[]): string {

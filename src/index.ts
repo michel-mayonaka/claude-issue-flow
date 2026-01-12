@@ -3,6 +3,7 @@
 import { program } from "commander";
 import { planIssue } from "./commands/plan-issue.js";
 import { issueApply } from "./commands/issue-apply.js";
+import { AppError } from "./types/index.js";
 
 program
   .name("claude-agent")
@@ -44,7 +45,13 @@ program
 
       console.log(`\nLogs: ${result.logDir}`);
     } catch (error) {
-      console.error("Error:", error instanceof Error ? error.message : error);
+      if (error instanceof AppError) {
+        console.error(error.toUserMessage());
+      } else if (error instanceof Error) {
+        console.error(`Error: ${error.message}`);
+      } else {
+        console.error("Error:", error);
+      }
       process.exit(1);
     }
   });
@@ -84,7 +91,13 @@ program
 
       console.log(`\nLogs: ${result.logDir}`);
     } catch (error) {
-      console.error("Error:", error instanceof Error ? error.message : error);
+      if (error instanceof AppError) {
+        console.error(error.toUserMessage());
+      } else if (error instanceof Error) {
+        console.error(`Error: ${error.message}`);
+      } else {
+        console.error("Error:", error);
+      }
       process.exit(1);
     }
   });

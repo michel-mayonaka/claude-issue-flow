@@ -1,6 +1,7 @@
 import { simpleGit, SimpleGit } from "simple-git";
 import { mkdir } from "fs/promises";
 import { join } from "path";
+import { WorktreeError } from "../types/errors.js";
 
 export interface WorktreeOptions {
   repo: string;
@@ -21,39 +22,46 @@ export interface WorktreeInfo {
 export async function createWorktree(
   options: WorktreeOptions
 ): Promise<WorktreeInfo> {
-  const git: SimpleGit = simpleGit(options.repo);
+  try {
+    const git: SimpleGit = simpleGit(options.repo);
 
-  // Determine base branch
-  let baseBranch = options.baseBranch;
-  if (!baseBranch) {
-    const status = await git.status();
-    baseBranch = status.current ?? "main";
+    // Determine base branch
+    let baseBranch = options.baseBranch;
+    if (!baseBranch) {
+      const status = await git.status();
+      baseBranch = status.current ?? "main";
+    }
+
+    // Generate branch name
+    const safeJobName = options.jobName
+      .toLowerCase()
+      .replace(/[^a-z0-9._-]+/g, "-");
+    const branchName = options.issueNumber
+      ? `${safeJobName}-${options.issueNumber}-${options.runId}`
+      : `${safeJobName}-${options.runId}`;
+
+    // Worktree directory
+    const logsRoot = options.logsRoot ?? join(options.repo, "logs");
+    const runDir = join(logsRoot, options.jobName, options.runId);
+    const worktreePath = join(runDir, "worktree");
+
+    await mkdir(runDir, { recursive: true });
+
+    // Create worktree
+    await git.raw(["worktree", "add", "-b", branchName, worktreePath, baseBranch]);
+
+    return {
+      path: worktreePath,
+      branch: branchName,
+      baseBranch,
+      repoPath: options.repo,
+    };
+  } catch (error) {
+    throw new WorktreeError(
+      `Worktreeの作成に失敗しました`,
+      { cause: error instanceof Error ? error : undefined }
+    );
   }
-
-  // Generate branch name
-  const safeJobName = options.jobName
-    .toLowerCase()
-    .replace(/[^a-z0-9._-]+/g, "-");
-  const branchName = options.issueNumber
-    ? `${safeJobName}-${options.issueNumber}-${options.runId}`
-    : `${safeJobName}-${options.runId}`;
-
-  // Worktree directory
-  const logsRoot = options.logsRoot ?? join(options.repo, "logs");
-  const runDir = join(logsRoot, options.jobName, options.runId);
-  const worktreePath = join(runDir, "worktree");
-
-  await mkdir(runDir, { recursive: true });
-
-  // Create worktree
-  await git.raw(["worktree", "add", "-b", branchName, worktreePath, baseBranch]);
-
-  return {
-    path: worktreePath,
-    branch: branchName,
-    baseBranch,
-    repoPath: options.repo,
-  };
 }
 
 export async function commitChanges(
@@ -101,8 +109,15 @@ export async function getDiff(worktree: WorktreeInfo): Promise<string> {
 }
 
 export async function removeWorktree(worktree: WorktreeInfo): Promise<void> {
-  const git: SimpleGit = simpleGit(worktree.repoPath);
-  await git.raw(["worktree", "remove", worktree.path, "--force"]);
+  try {
+    const git: SimpleGit = simpleGit(worktree.repoPath);
+    await git.raw(["worktree", "remove", worktree.path, "--force"]);
+  } catch (error) {
+    throw new WorktreeError(
+      `Worktreeのクリーンアップに失敗しました: ${worktree.path}`,
+      { cause: error instanceof Error ? error : undefined }
+    );
+  }
 }
 
 export async function deleteBranch(

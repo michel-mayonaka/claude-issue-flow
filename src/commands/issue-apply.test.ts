@@ -229,7 +229,7 @@ pr_body: |
         issue: 42,
         repo: testDir,
       })
-    ).rejects.toThrow("Agent execution failed");
+    ).rejects.toThrow("Issue実装エージェントの実行に失敗しました");
   });
 
   it("should return without PR when no changes made", async () => {
