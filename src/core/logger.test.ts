@@ -146,6 +146,18 @@ describe("ExecutionLogger", () => {
     });
   });
 
+  describe("saveText", () => {
+    it("should save plain text to file", async () => {
+      const text = "Hello\nWorld\nTest";
+      await logger.saveText("output.txt", text);
+
+      const file = join(logger.getLogDir(), "output.txt");
+      const content = await readFile(file, "utf-8");
+
+      expect(content).toBe(text);
+    });
+  });
+
   describe("convenience methods", () => {
     it("should save issue JSON", async () => {
       const issue = { number: 123, title: "Test" };

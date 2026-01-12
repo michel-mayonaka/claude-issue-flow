@@ -84,7 +84,7 @@ export async function issueApply(
 
   // 4. Build prompt
   const prompt = buildIssueApplyPrompt({ issue, skills });
-  await logger.saveJson("prompt.txt", prompt);
+  await logger.saveText("prompt.txt", prompt);
 
   // 5. Run agent
   await logger.info("Running agent...");
@@ -161,8 +161,23 @@ export async function issueApply(
 
     const prTitle =
       prInfo?.title || `Implement #${issue.number}: ${issue.title}`;
-    const prBody =
+    const prBodyBase =
       prInfo?.body || generateDefaultPRBody(issue, finalMessage);
+
+    // 統計情報を追記
+    const statsSection = `
+---
+
+## Agent Statistics
+
+| Item | Value |
+|------|-------|
+| Model | ${model} |
+| Turns | ${result.numTurns} |
+| Cost | $${result.costUSD.toFixed(4)} |
+| Duration | ${(result.durationMs / 1000).toFixed(1)}s |
+`;
+    const prBody = prBodyBase + statsSection;
 
     pr = await createPullRequest(repoPath, {
       title: prTitle,

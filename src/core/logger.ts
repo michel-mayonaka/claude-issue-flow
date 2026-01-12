@@ -96,6 +96,11 @@ export class ExecutionLogger {
     );
   }
 
+  async saveText(filename: string, content: string): Promise<void> {
+    await this.init();
+    await writeFile(join(this.logDir, filename), content);
+  }
+
   async logIssue(issue: unknown): Promise<void> {
     await this.saveJson("issue.json", issue);
   }
