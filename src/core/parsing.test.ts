@@ -1,30 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { buildPlanIssuePrompt } from "./plan-issue.js";
-import { parsePlanMarkdown } from "../core/parsing.js";
-
-describe("buildPlanIssuePrompt", () => {
-  it("should build prompt with request only", () => {
-    const result = buildPlanIssuePrompt({
-      request: "Add a new feature",
-    });
-
-    expect(result).toContain("Add a new feature");
-    expect(result).toContain("# タスク: 対話的な実装計画の立案");
-    expect(result).toContain("## 依頼内容");
-    expect(result).toContain("AskUserQuestion");
-    expect(result).not.toContain("## 追加コンテキスト");
-  });
-
-  it("should include additional context when provided", () => {
-    const result = buildPlanIssuePrompt({
-      request: "Add a new feature",
-      additionalContext: "This is for the admin panel",
-    });
-
-    expect(result).toContain("## 追加コンテキスト");
-    expect(result).toContain("This is for the admin panel");
-  });
-});
+import { parsePlanMarkdown, parsePlanFromInput } from "./parsing.js";
 
 describe("parsePlanMarkdown", () => {
   it("should parse plan from markdown code block", () => {
@@ -106,19 +81,89 @@ Add user login.
     expect(result!.title).toBe("Add authentication");
     expect(result!.body).toContain("## Overview");
   });
+});
 
-  it("should handle empty title gracefully", () => {
-    const content = `
-\`\`\`markdown
-# 計画:
+describe("parsePlanFromInput", () => {
+  it("should parse plan with Japanese prefix", () => {
+    const plan = `# 計画: コード構造の整理
 
 ## 概要
-Something
-\`\`\`
+コードを整理する
+
+## 変更対象
+- \`src/index.ts\`: リファクタリング
 `;
 
-    const result = parsePlanMarkdown(content);
+    const result = parsePlanFromInput(plan);
 
     expect(result).not.toBeNull();
+    expect(result!.title).toBe("コード構造の整理");
+    expect(result!.body).toContain("## 概要");
+    expect(result!.body).toContain("コードを整理する");
+  });
+
+  it("should parse plan with English prefix", () => {
+    const plan = `# Plan: Refactoring
+
+## Overview
+Clean up code
+`;
+
+    const result = parsePlanFromInput(plan);
+
+    expect(result).not.toBeNull();
+    expect(result!.title).toBe("Refactoring");
+    expect(result!.body).toContain("## Overview");
+  });
+
+  it("should return null when no plan prefix found", () => {
+    const plan = `## Some heading
+Just some content without plan prefix
+`;
+
+    const result = parsePlanFromInput(plan);
+
+    expect(result).toBeNull();
+  });
+
+  it("should remove trailing text after separator (---)", () => {
+    const plan = `# 計画: テスト機能
+
+## 概要
+テスト機能を追加
+
+## 注意事項
+- 注意点1
+
+---
+
+この計画で問題ありませんか？承認いただければ終了します。`;
+
+    const result = parsePlanFromInput(plan);
+
+    expect(result).not.toBeNull();
+    expect(result!.title).toBe("テスト機能");
+    expect(result!.body).toContain("## 概要");
+    expect(result!.body).toContain("## 注意事項");
+    expect(result!.body).not.toContain("この計画で問題ありませんか");
+  });
+
+  it("should keep separator when followed by heading", () => {
+    const plan = `# 計画: テスト
+
+## セクション1
+内容1
+
+---
+
+## セクション2
+内容2
+`;
+
+    const result = parsePlanFromInput(plan);
+
+    expect(result).not.toBeNull();
+    expect(result!.body).toContain("## セクション1");
+    expect(result!.body).toContain("## セクション2");
   });
 });
