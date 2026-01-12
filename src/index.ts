@@ -37,7 +37,8 @@ program
       if (result.issues.length > 0) {
         console.log("\nCreated issues:");
         for (const issue of result.issues) {
-          console.log(`  - #${issue.number}: ${issue.url}`);
+          console.log(`  - #${issue.number}`);
+          console.log(`    ${issue.url}`);
         }
       }
 
@@ -73,7 +74,8 @@ program
       console.log(`Changed files: ${result.changedFiles.length}`);
 
       if (result.pr) {
-        console.log(`PR: #${result.pr.number} - ${result.pr.url}`);
+        console.log(`PR: #${result.pr.number}`);
+        console.log(`    ${result.pr.url}`);
       }
 
       console.log(`\nLogs: ${result.logDir}`);

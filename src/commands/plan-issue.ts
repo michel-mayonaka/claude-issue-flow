@@ -112,7 +112,8 @@ export async function planIssue(
       await logger.logIssue(issue);
       await logger.info(`Created issue #${issue.number}: ${issue.url}`);
 
-      console.log(`Created issue #${issue.number}: ${issue.url}`);
+      console.log(`Created issue #${issue.number}`);
+      console.log(`  ${issue.url}`);
     } catch (error) {
       await logger.error("Failed to create issue", { error: String(error) });
       throw error;

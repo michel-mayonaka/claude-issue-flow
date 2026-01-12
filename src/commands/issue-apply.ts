@@ -186,7 +186,8 @@ export async function issueApply(
     });
 
     await logger.logPR(pr);
-    await logger.info(`Created PR #${pr.number}: ${pr.url}`);
+    await logger.info(`Created PR #${pr.number}`);
+    await logger.info(`  ${pr.url}`);
   }
 
   await logger.info("issue-apply completed", {

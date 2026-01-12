@@ -100,7 +100,8 @@ async function main() {
     });
 
     // 成功メッセージを出力（Claudeのトランスクリプトに追加される）
-    console.log(`GitHub Issue created: #${issue.number} - ${issue.url}`);
+    console.log(`GitHub Issue created: #${issue.number}`);
+    console.log(`  ${issue.url}`);
 
     process.exit(0);
   } catch (error) {
