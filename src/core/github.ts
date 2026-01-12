@@ -1,5 +1,7 @@
 import { Octokit } from "@octokit/rest";
 import { execSync } from "child_process";
+import { GitHubAPIError, ConfigurationError, ParseError } from "../types/errors.js";
+import { withRetry } from "./retry.js";
 
 export interface GitHubIssue {
   number: number;
@@ -50,7 +52,7 @@ function getRepoInfo(repoPath: string): { owner: string; repo: string } {
 
   const match = httpsMatch || sshMatch;
   if (!match) {
-    throw new Error(`Cannot parse GitHub repo from remote URL: ${remoteUrl}`);
+    throw new ParseError(`GitHubリポジトリURLを解析できません: ${remoteUrl}`);
   }
 
   return { owner: match[1], repo: match[2] };
@@ -65,8 +67,9 @@ function getGitHubToken(): string {
   try {
     return execSync("gh auth token", { encoding: "utf-8", stdio: ["pipe", "pipe", "pipe"] }).trim();
   } catch {
-    throw new Error(
-      "GitHub token not found. Run 'gh auth login' or set GH_TOKEN environment variable."
+    throw new ConfigurationError(
+      "GitHubトークンが見つかりません",
+      { suggestion: "'gh auth login' を実行するか、GH_TOKEN環境変数を設定してください。" }
     );
   }
 }
@@ -87,7 +90,7 @@ export async function fetchIssue(
   if (typeof issueRef === "string" && issueRef.includes("github.com")) {
     const match = issueRef.match(/issues\/(\d+)/);
     if (!match) {
-      throw new Error(`Cannot parse issue number from URL: ${issueRef}`);
+      throw new ParseError(`Issue番号を解析できません: ${issueRef}`);
     }
     issueNumber = parseInt(match[1], 10);
   } else {
@@ -95,11 +98,14 @@ export async function fetchIssue(
       typeof issueRef === "number" ? issueRef : parseInt(issueRef, 10);
   }
 
-  const { data } = await octokit.issues.get({
-    owner,
-    repo,
-    issue_number: issueNumber,
-  });
+  const { data } = await withRetry(
+    () => octokit.issues.get({
+      owner,
+      repo,
+      issue_number: issueNumber,
+    }),
+    { maxAttempts: 3 }
+  );
 
   return {
     number: data.number,
@@ -120,15 +126,18 @@ export async function createIssue(
   const octokit = getOctokit();
   const { owner, repo } = getRepoInfo(repoPath);
 
-  const { data: created } = await octokit.issues.create({
-    owner,
-    repo,
-    title: data.title,
-    body: data.body,
-    labels: data.labels,
-    assignees: data.assignees,
-    milestone: data.milestone,
-  });
+  const { data: created } = await withRetry(
+    () => octokit.issues.create({
+      owner,
+      repo,
+      title: data.title,
+      body: data.body,
+      labels: data.labels,
+      assignees: data.assignees,
+      milestone: data.milestone,
+    }),
+    { maxAttempts: 3 }
+  );
 
   return {
     number: created.number,
@@ -151,15 +160,18 @@ export async function createPullRequest(
   const octokit = getOctokit();
   const { owner, repo } = getRepoInfo(repoPath);
 
-  const { data: pr } = await octokit.pulls.create({
-    owner,
-    repo,
-    title: data.title,
-    body: data.body,
-    head: data.head,
-    base: data.base,
-    draft: data.draft ?? true,
-  });
+  const { data: pr } = await withRetry(
+    () => octokit.pulls.create({
+      owner,
+      repo,
+      title: data.title,
+      body: data.body,
+      head: data.head,
+      base: data.base,
+      draft: data.draft ?? true,
+    }),
+    { maxAttempts: 3 }
+  );
 
   return {
     number: pr.number,

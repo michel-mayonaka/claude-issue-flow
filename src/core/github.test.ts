@@ -135,7 +135,7 @@ describe("github", () => {
         return "https://github.com/owner/repo.git\n";
       });
 
-      await expect(fetchIssue("/repo", 1)).rejects.toThrow("GitHub token not found");
+      await expect(fetchIssue("/repo", 1)).rejects.toThrow("GitHubトークンが見つかりません");
     });
 
     it("should parse SSH remote URL", async () => {

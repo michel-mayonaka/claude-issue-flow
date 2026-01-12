@@ -58,7 +58,7 @@ describe("planIssue", () => {
       planIssue({
         repo: testDir,
       })
-    ).rejects.toThrow("Either --request or --request-file must be provided");
+    ).rejects.toThrow("リクエストが指定されていません");
   });
 
   it("should read request from file when requestFile provided", async () => {
@@ -166,7 +166,7 @@ Content
         repo: testDir,
         request: "Some request",
       })
-    ).rejects.toThrow("Agent execution failed");
+    ).rejects.toThrow("計画立案エージェントの実行に失敗しました");
   });
 
   it("should throw error when no plan found", async () => {
@@ -187,7 +187,7 @@ Content
         repo: testDir,
         request: "Some request",
       })
-    ).rejects.toThrow("No valid plan found in agent output");
+    ).rejects.toThrow("エージェント出力から有効な計画を取得できませんでした");
   });
 
   it("should skip issue creation in dry run mode", async () => {

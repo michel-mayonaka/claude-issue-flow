@@ -5,6 +5,7 @@ import { createIssue, type GitHubIssue } from "../core/github.js";
 import { setupLogger } from "../core/init.js";
 import { parsePlanMarkdown } from "../core/parsing.js";
 import { buildPlanIssuePrompt } from "../prompts/plan-issue.js";
+import { ConfigurationError, AgentExecutionError, ParseError, AppError } from "../types/index.js";
 
 export interface PlanIssueOptions {
   request?: string;
@@ -35,7 +36,10 @@ export async function planIssue(
   } else if (options.request) {
     request = options.request;
   } else {
-    throw new Error("Either --request or --request-file must be provided");
+    throw new ConfigurationError(
+      "リクエストが指定されていません",
+      { suggestion: "--request または --request-file オプションを指定してください。" }
+    );
   }
 
   await logger.info("Request content", { request });
@@ -64,7 +68,7 @@ export async function planIssue(
 
   if (!result.success) {
     await logger.error("Agent execution failed");
-    throw new Error("Agent execution failed");
+    throw new AgentExecutionError("計画立案エージェントの実行に失敗しました");
   }
 
   // Extract final message and parse plan
@@ -84,7 +88,7 @@ export async function planIssue(
 
   if (!planData) {
     await logger.error("No valid plan found in agent output");
-    throw new Error("No valid plan found in agent output");
+    throw new ParseError("エージェント出力から有効な計画を取得できませんでした");
   }
 
   await logger.info(`Found plan: ${planData.title}`);
