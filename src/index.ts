@@ -57,6 +57,8 @@ program
   .option("--draft", "Create PR as draft", true)
   .option("--no-draft", "Create PR as ready for review")
   .option("--skip-pr", "Skip PR creation")
+  .option("--cleanup", "Cleanup worktree and local branch after PR creation", false)
+  .option("--cleanup-remote", "Also delete remote branch during cleanup (requires --cleanup)", false)
   .action(async (opts) => {
     try {
       const result = await issueApply({
@@ -65,6 +67,8 @@ program
         model: opts.model as "haiku" | "sonnet" | "opus",
         draft: opts.draft,
         skipPr: opts.skipPr,
+        cleanup: opts.cleanup,
+        cleanupRemote: opts.cleanupRemote,
       });
 
       console.log("\n=== issue-apply completed ===");

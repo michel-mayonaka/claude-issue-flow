@@ -18,7 +18,7 @@ vi.mock("simple-git", () => ({
 }));
 
 // Must import after mock setup
-const { createWorktree, commitChanges, pushBranch, getChangedFiles, getDiff, removeWorktree, deleteBranch } = await import("./worktree.js");
+const { createWorktree, commitChanges, pushBranch, getChangedFiles, getDiff, removeWorktree, deleteBranch, deleteRemoteBranch, listWorktrees, pruneWorktrees, cleanupWorktree } = await import("./worktree.js");
 
 describe("createWorktree", () => {
   beforeEach(() => {
@@ -294,5 +294,96 @@ describe("deleteBranch", () => {
     await deleteBranch(worktree, true);
 
     expect(mockGitInstance.branch).toHaveBeenCalledWith(["-D", "feature-123"]);
+  });
+});
+
+describe("deleteRemoteBranch", () => {
+  it("should delete remote branch using git push --delete", async () => {
+    mockGitInstance.push.mockResolvedValue(undefined);
+
+    await deleteRemoteBranch("/repo/path", "feature-123");
+
+    expect(mockGitInstance.push).toHaveBeenCalledWith([
+      "origin",
+      "--delete",
+      "feature-123",
+    ]);
+  });
+});
+
+describe("listWorktrees", () => {
+  it("should parse git worktree list --porcelain output", async () => {
+    mockGitInstance.raw.mockResolvedValueOnce(
+      "worktree /repo\nHEAD abc123\nbranch refs/heads/main\n\nworktree /repo/logs/issue-apply/run1/worktree\nHEAD def456\nbranch refs/heads/feature-1\n\n"
+    );
+
+    const result = await listWorktrees("/repo/path");
+
+    expect(result).toHaveLength(2);
+    expect(result[1]).toEqual({
+      path: "/repo/logs/issue-apply/run1/worktree",
+      head: "def456",
+      branch: "feature-1",
+    });
+  });
+});
+
+describe("pruneWorktrees", () => {
+  it("should call git worktree prune", async () => {
+    mockGitInstance.raw.mockResolvedValue("");
+
+    await pruneWorktrees("/repo/path");
+
+    expect(mockGitInstance.raw).toHaveBeenCalledWith(["worktree", "prune"]);
+  });
+});
+
+describe("cleanupWorktree", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("should remove worktree and delete local branch", async () => {
+    mockGitInstance.raw.mockResolvedValue("");
+    mockGitInstance.branch.mockResolvedValue(undefined);
+
+    const worktree = {
+      path: "/worktree/path",
+      branch: "feature-123",
+      baseBranch: "main",
+      repoPath: "/repo/path",
+    };
+
+    await cleanupWorktree({ worktree });
+
+    expect(mockGitInstance.raw).toHaveBeenCalledWith([
+      "worktree",
+      "remove",
+      "/worktree/path",
+      "--force",
+    ]);
+    expect(mockGitInstance.branch).toHaveBeenCalledWith(["-D", "feature-123"]);
+    expect(mockGitInstance.push).not.toHaveBeenCalled();
+  });
+
+  it("should also delete remote branch when deleteRemote is true", async () => {
+    mockGitInstance.raw.mockResolvedValue("");
+    mockGitInstance.branch.mockResolvedValue(undefined);
+    mockGitInstance.push.mockResolvedValue(undefined);
+
+    const worktree = {
+      path: "/worktree/path",
+      branch: "feature-123",
+      baseBranch: "main",
+      repoPath: "/repo/path",
+    };
+
+    await cleanupWorktree({ worktree, deleteRemote: true });
+
+    expect(mockGitInstance.push).toHaveBeenCalledWith([
+      "origin",
+      "--delete",
+      "feature-123",
+    ]);
   });
 });
