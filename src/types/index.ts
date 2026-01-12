@@ -4,3 +4,24 @@ export type { LogEntry } from "../core/logger.js";
 export type { WorktreeInfo, WorktreeOptions } from "../core/worktree.js";
 export type { PlanIssueOptions, PlanIssueResult } from "../commands/plan-issue.js";
 export type { IssueApplyOptions, IssueApplyResult } from "../commands/issue-apply.js";
+
+export interface ParsedPlan {
+  title: string;
+  body: string;
+}
+
+export interface ParsedPRInfo {
+  title: string;
+  body: string;
+}
+
+export interface HookInput {
+  session_id: string;
+  transcript_path: string;
+  cwd: string;
+  hook_event_name: string;
+  tool_name: string;
+  tool_input: Record<string, unknown>;
+  tool_response?: Record<string, unknown>;
+  [key: string]: unknown;
+}
