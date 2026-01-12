@@ -1,30 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { buildPlanIssuePrompt } from "./plan-issue.js";
-import { parsePlanMarkdown } from "../core/parsing.js";
-
-describe("buildPlanIssuePrompt", () => {
-  it("should build prompt with request only", () => {
-    const result = buildPlanIssuePrompt({
-      request: "Add a new feature",
-    });
-
-    expect(result).toContain("Add a new feature");
-    expect(result).toContain("# タスク: 対話的な実装計画の立案");
-    expect(result).toContain("## 依頼内容");
-    expect(result).toContain("AskUserQuestion");
-    expect(result).not.toContain("## 追加コンテキスト");
-  });
-
-  it("should include additional context when provided", () => {
-    const result = buildPlanIssuePrompt({
-      request: "Add a new feature",
-      additionalContext: "This is for the admin panel",
-    });
-
-    expect(result).toContain("## 追加コンテキスト");
-    expect(result).toContain("This is for the admin panel");
-  });
-});
+import { parsePlanMarkdown } from "./parsing.js";
 
 describe("parsePlanMarkdown", () => {
   it("should parse plan from markdown code block", () => {
@@ -119,8 +94,6 @@ Something
 
     const result = parsePlanMarkdown(content);
 
-    // markdownブロック内に "# 計画:" があっても、タイトルが空の場合はフォールバック
-    // 実際には "## 概要" が最初の行として取得される（空行がスキップされる）
     expect(result).not.toBeNull();
   });
 });

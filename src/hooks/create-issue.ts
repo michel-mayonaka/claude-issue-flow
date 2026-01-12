@@ -15,50 +15,10 @@
  */
 
 import { createIssue } from "../core/github.js";
+import { parsePlanMarkdown } from "../core/parsing.js";
+import type { HookInput, ParsedPlan } from "../types/index.js";
 import { readFileSync } from "fs";
 
-interface HookInput {
-  session_id: string;
-  transcript_path: string;
-  cwd: string;
-  hook_event_name: string;
-  tool_name: string;
-  tool_input: Record<string, unknown>;
-  tool_response?: Record<string, unknown>;
-}
-
-interface ParsedPlan {
-  title: string;
-  body: string;
-}
-
-function parsePlanFromInput(plan: string): ParsedPlan | null {
-  // "# 計画: タイトル" または "# Plan: タイトル" を探す
-  const titleMatch = plan.match(/^#\s*(?:計画|Plan):\s*(.+)$/m);
-  if (!titleMatch) {
-    return null;
-  }
-
-  const title = titleMatch[1].trim();
-
-  // タイトル行以降を本文として取得
-  const titleIndex = plan.indexOf(titleMatch[0]);
-  let body = plan.slice(titleIndex + titleMatch[0].length).trim();
-
-  // 計画の終端を検出（---の後のテキストを削除）
-  // ただし、---の後に見出し（#で始まる行）がある場合は削除しない
-  const separatorIndex = body.lastIndexOf("\n---\n");
-  if (separatorIndex !== -1) {
-    // ---の後のテキストを取得（空行をスキップ）
-    const afterSeparator = body.slice(separatorIndex + 5).replace(/^\n+/, "");
-    // 見出し（#で始まる）でない場合は削除
-    if (afterSeparator && !afterSeparator.startsWith("#")) {
-      body = body.slice(0, separatorIndex).trim();
-    }
-  }
-
-  return { title, body };
-}
 
 function extractPlanFromTranscript(transcriptPath: string): string | null {
   // JSONLファイルを読み込み
@@ -126,7 +86,7 @@ async function main() {
     }
 
     // 計画をパース
-    const parsed = parsePlanFromInput(planContent);
+    const parsed = parsePlanMarkdown(planContent);
 
     if (!parsed) {
       console.error("Could not parse plan. Expected format: '# 計画: [タイトル]'");
