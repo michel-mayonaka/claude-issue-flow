@@ -13,7 +13,7 @@ import {
   getChangedFiles,
   type WorktreeInfo,
 } from "../core/worktree.js";
-import { ExecutionLogger, generateRunId } from "../core/logger.js";
+import { setupLogger } from "../core/init.js";
 import { loadSkills } from "../prompts/skills.js";
 import {
   buildIssueApplyPrompt,
@@ -47,12 +47,9 @@ const MODEL_MAP = {
 export async function issueApply(
   options: IssueApplyOptions
 ): Promise<IssueApplyResult> {
-  const runId = generateRunId();
   const repoPath = resolve(options.repo);
-  const logsRoot = resolve(repoPath, "logs");
-  const logger = new ExecutionLogger("issue-apply", runId, logsRoot);
+  const { logger, runId } = await setupLogger("issue-apply", repoPath);
 
-  await logger.init();
   await logger.info("Starting issue-apply", {
     options: { ...options, repo: repoPath },
   });
@@ -65,6 +62,7 @@ export async function issueApply(
 
   // 2. Create worktree
   await logger.info("Creating worktree...");
+  const logsRoot = resolve(repoPath, "logs");
   const worktree = await createWorktree({
     repo: repoPath,
     runId,

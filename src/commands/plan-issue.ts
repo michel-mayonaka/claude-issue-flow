@@ -2,11 +2,9 @@ import { resolve } from "path";
 import { readFile } from "fs/promises";
 import { runAgent, extractFinalMessage } from "../core/agent.js";
 import { createIssue, type GitHubIssue } from "../core/github.js";
-import { ExecutionLogger, generateRunId } from "../core/logger.js";
-import {
-  buildPlanIssuePrompt,
-  parsePlanMarkdown,
-} from "../prompts/plan-issue.js";
+import { setupLogger } from "../core/init.js";
+import { parsePlanMarkdown } from "../core/parsing.js";
+import { buildPlanIssuePrompt } from "../prompts/plan-issue.js";
 
 export interface PlanIssueOptions {
   request?: string;
@@ -26,11 +24,9 @@ export interface PlanIssueResult {
 export async function planIssue(
   options: PlanIssueOptions
 ): Promise<PlanIssueResult> {
-  const runId = generateRunId();
   const repoPath = resolve(options.repo);
-  const logger = new ExecutionLogger("plan-issue", runId, resolve(repoPath, "logs"));
+  const { logger, runId } = await setupLogger("plan-issue", repoPath);
 
-  await logger.init();
   await logger.info("Starting plan-issue", { options: { ...options, repo: repoPath } });
 
   // Get request content
