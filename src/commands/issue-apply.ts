@@ -11,6 +11,7 @@ import {
   commitChanges,
   pushBranch,
   getChangedFiles,
+  cleanupWorktree,
   type WorktreeInfo,
 } from "../core/worktree.js";
 import { setupLogger } from "../core/init.js";
@@ -27,6 +28,8 @@ export interface IssueApplyOptions {
   model?: "haiku" | "sonnet" | "opus";
   draft?: boolean;
   skipPr?: boolean;
+  cleanup?: boolean;
+  cleanupRemote?: boolean;
 }
 
 export interface IssueApplyResult {
@@ -188,6 +191,21 @@ export async function issueApply(
     await logger.logPR(pr);
     await logger.info(`Created PR #${pr.number}`);
     await logger.info(`  ${pr.url}`);
+  }
+
+  if (options.cleanup) {
+    await logger.info("Cleaning up worktree and branches...");
+    try {
+      await cleanupWorktree({
+        worktree,
+        deleteRemote: options.cleanupRemote,
+      });
+      await logger.info("Cleanup completed");
+    } catch (cleanupError) {
+      await logger.warn("Cleanup failed", {
+        error: cleanupError instanceof Error ? cleanupError.message : String(cleanupError),
+      });
+    }
   }
 
   await logger.info("issue-apply completed", {

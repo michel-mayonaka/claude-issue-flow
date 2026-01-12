@@ -113,3 +113,66 @@ export async function deleteBranch(
   const flag = force ? "-D" : "-d";
   await git.branch([flag, worktree.branch]);
 }
+
+export async function deleteRemoteBranch(
+  repoPath: string,
+  branch: string
+): Promise<void> {
+  const git: SimpleGit = simpleGit(repoPath);
+  await git.push(["origin", "--delete", branch]);
+}
+
+export interface WorktreeListEntry {
+  path: string;
+  head: string;
+  branch: string | null;
+}
+
+export async function listWorktrees(repoPath: string): Promise<WorktreeListEntry[]> {
+  const git: SimpleGit = simpleGit(repoPath);
+  const output = await git.raw(["worktree", "list", "--porcelain"]);
+
+  const entries: WorktreeListEntry[] = [];
+  let current: Partial<WorktreeListEntry> = {};
+
+  for (const line of output.split("\n")) {
+    if (line.startsWith("worktree ")) {
+      current.path = line.substring(9);
+    } else if (line.startsWith("HEAD ")) {
+      current.head = line.substring(5);
+    } else if (line.startsWith("branch ")) {
+      current.branch = line.substring(7).replace("refs/heads/", "");
+    } else if (line === "" && current.path) {
+      entries.push({
+        path: current.path,
+        head: current.head ?? "",
+        branch: current.branch ?? null,
+      });
+      current = {};
+    }
+  }
+
+  return entries;
+}
+
+export async function pruneWorktrees(repoPath: string): Promise<void> {
+  const git: SimpleGit = simpleGit(repoPath);
+  await git.raw(["worktree", "prune"]);
+}
+
+export interface CleanupOptions {
+  worktree: WorktreeInfo;
+  deleteRemote?: boolean;
+}
+
+export async function cleanupWorktree(options: CleanupOptions): Promise<void> {
+  const { worktree, deleteRemote = false } = options;
+
+  await removeWorktree(worktree);
+
+  await deleteBranch(worktree, true);
+
+  if (deleteRemote) {
+    await deleteRemoteBranch(worktree.repoPath, worktree.branch);
+  }
+}
