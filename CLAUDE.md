@@ -41,8 +41,22 @@ src/
 ├── hooks/             # Claude Code hooks実装
 ├── prompts/           # プロンプトテンプレート
 └── types/             # 型定義（エラークラス含む）
-skills/                # agentスキル定義
+skills/
+├── docs/              # コードベースドキュメント（/gen-docsで生成）
+├── global/            # 全体で使用するスキル
+└── optional/          # オプションスキル
 ```
+
+## コードベース理解
+
+実装作業を開始する前に、`skills/docs/`のドキュメントを参照してコードベースの概要を把握すること：
+
+- `skills/docs/architecture.md`: モジュール構成、レイヤー構造、依存関係
+- `skills/docs/api-reference.md`: 公開API・関数のリファレンス
+- `skills/docs/usage-guide.md`: CLI・コマンドの使い方
+- `skills/docs/code-patterns.md`: コーディングパターン・規約
+
+ドキュメントが古い場合は`/gen-docs`で再生成できる。
 
 ## よく使うコマンド
 
