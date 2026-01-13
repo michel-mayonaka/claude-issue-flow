@@ -190,9 +190,9 @@ export async function issueApply(
 <details>
 <summary>Prompt</summary>
 
-\`\`\`
+\`\`\`\`\`
 ${prompt}
-\`\`\`
+\`\`\`\`\`
 
 </details>
 
