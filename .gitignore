@@ -37,3 +37,6 @@ coverage/
 # Personal notes
 INBOX.md
 repositories/
+
+# Wiki (separate git repo)
+wiki/

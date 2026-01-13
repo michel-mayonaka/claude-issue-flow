@@ -7,6 +7,14 @@ Claude Code Agent SDKを使用したGitHub Issue駆動ワークフローツー�
 - **plan-issue**: Opusモデルで計画を立案し、GitHub Issueを作成
 - **issue-apply**: Haiku/SonnetモデルでIssueを実装し、PRを作成
 
+## ドキュメント
+
+| 場所 | 役割 | 内容 |
+|------|------|------|
+| [Wiki](https://github.com/michel-mayonaka/claude-issue-flow/wiki) | 理想 | 仕様（spec）・構想・ビジョン |
+| Repository | 現実 | 実装されたコード・現在の状態 |
+| [Issues](https://github.com/michel-mayonaka/claude-issue-flow/issues) | 理想を現実へ | やるべきタスク・実装計画 |
+
 ## セットアップ
 
 ### 必要条件
