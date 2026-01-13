@@ -213,7 +213,7 @@ ${executionLog}
       body: prBody,
       head: worktree.branch,
       base: worktree.baseBranch,
-      draft: options.draft ?? true,
+      draft: options.draft ?? false,
     });
 
     await logger.logPR(pr);

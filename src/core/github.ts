@@ -209,7 +209,7 @@ export async function createPullRequest(
         body: data.body,
         head: data.head,
         base: data.base,
-        draft: data.draft ?? true,
+        draft: data.draft ?? false,
       }),
       { maxAttempts: 3 }
     );

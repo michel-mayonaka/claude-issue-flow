@@ -73,10 +73,6 @@ pr_body: |
   ## 概要
   - 変更内容の要約
 
-  ## 変更点
-  - 変更1
-  - 変更2
-
   ## 確認方法
   動作確認の手順
 
@@ -122,17 +118,38 @@ export function parsePRInfo(content: string): {
   return null;
 }
 
+export function extractImplementationReport(content: string): string | null {
+  // 「## 実装レポート」セクションを抽出
+  const match = content.match(/## 実装レポート\s*\n([\s\S]*?)(?=\n## [^#]|$)/);
+  if (match) {
+    return match[1].trim();
+  }
+  return null;
+}
+
 export function generateDefaultPRBody(
   issue: GitHubIssue,
   finalMessage: string
 ): string {
-  return `## 概要
+  const report = extractImplementationReport(finalMessage);
+
+  if (report) {
+    return `## 概要
 
 Issue #${issue.number} の実装
 
-## 変更点
+${report}
 
-${finalMessage.slice(0, 1000)}...
+## 関連Issue
+
+Closes #${issue.number}
+`;
+  }
+
+  // 実装レポートが見つからない場合のフォールバック
+  return `## 概要
+
+Issue #${issue.number} の実装
 
 ## 関連Issue
 

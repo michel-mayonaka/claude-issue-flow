@@ -238,7 +238,7 @@ describe("github", () => {
       });
     });
 
-    it("should default draft to true", async () => {
+    it("should default draft to false", async () => {
       mockOctokit.pulls.create.mockResolvedValue({
         data: {
           number: 201,
@@ -256,7 +256,7 @@ describe("github", () => {
 
       expect(mockOctokit.pulls.create).toHaveBeenCalledWith(
         expect.objectContaining({
-          draft: true,
+          draft: false,
         })
       );
     });

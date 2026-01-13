@@ -3,6 +3,7 @@ import {
   buildIssueApplyPrompt,
   parsePRInfo,
   generateDefaultPRBody,
+  extractImplementationReport,
 } from "./issue-apply.js";
 import type { GitHubIssue } from "../core/github.js";
 
@@ -165,24 +166,93 @@ pr_body: |
   });
 });
 
+describe("extractImplementationReport", () => {
+  it("should extract implementation report section", () => {
+    const content = `
+Some preamble text
+
+## 実装レポート
+
+### 概要
+Changed some files.
+
+### 変更ファイル
+- src/foo.ts: Updated function
+
+### 受け入れ条件の確認
+- [x] Condition 1
+
+## PR情報
+
+\`\`\`yaml
+pr_title: "Title"
+\`\`\`
+`;
+
+    const result = extractImplementationReport(content);
+
+    expect(result).not.toBeNull();
+    expect(result).toContain("### 概要");
+    expect(result).toContain("Changed some files");
+    expect(result).toContain("### 変更ファイル");
+    expect(result).not.toContain("## PR情報");
+  });
+
+  it("should return null when no implementation report found", () => {
+    const content = "Just some text without implementation report";
+
+    const result = extractImplementationReport(content);
+
+    expect(result).toBeNull();
+  });
+
+  it("should handle implementation report at end of content", () => {
+    const content = `
+## 実装レポート
+
+### 概要
+Final implementation.
+`;
+
+    const result = extractImplementationReport(content);
+
+    expect(result).not.toBeNull();
+    expect(result).toContain("Final implementation");
+  });
+});
+
 describe("generateDefaultPRBody", () => {
-  it("should generate default PR body", () => {
+  it("should extract implementation report when present", () => {
+    const finalMessage = `
+## 実装レポート
+
+### 概要
+Changed 3 files.
+
+### 変更ファイル
+- src/foo.ts: Updated
+
+## PR情報
+`;
+
+    const result = generateDefaultPRBody(mockIssue, finalMessage);
+
+    expect(result).toContain("## 概要");
+    expect(result).toContain(`Issue #${mockIssue.number}`);
+    expect(result).toContain("### 概要");
+    expect(result).toContain("Changed 3 files");
+    expect(result).toContain(`Closes #${mockIssue.number}`);
+  });
+
+  it("should generate simple fallback when no implementation report", () => {
     const result = generateDefaultPRBody(
       mockIssue,
-      "Implementation complete. Changed 3 files."
+      "Some random text without implementation report"
     );
 
     expect(result).toContain("## 概要");
     expect(result).toContain(`Issue #${mockIssue.number}`);
-    expect(result).toContain("Implementation complete");
     expect(result).toContain(`Closes #${mockIssue.number}`);
-  });
-
-  it("should truncate long final messages", () => {
-    const longMessage = "x".repeat(2000);
-    const result = generateDefaultPRBody(mockIssue, longMessage);
-
-    expect(result.length).toBeLessThan(2000);
-    expect(result).toContain("...");
+    expect(result).not.toContain("Some random text");
   });
 });

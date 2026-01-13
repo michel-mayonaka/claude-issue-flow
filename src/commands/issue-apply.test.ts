@@ -183,7 +183,7 @@ pr_body: |
         title: "Implement feature X",
         head: mockWorktree.branch,
         base: mockWorktree.baseBranch,
-        draft: true,
+        draft: false,
       })
     );
     expect(result.pr?.number).toBe(100);
@@ -200,17 +200,17 @@ pr_body: |
     expect(result.pr).toBeNull();
   });
 
-  it("should create non-draft PR when draft is false", async () => {
+  it("should create draft PR when draft is true", async () => {
     await issueApply({
       issue: 42,
       repo: testDir,
-      draft: false,
+      draft: true,
     });
 
     expect(createPullRequest).toHaveBeenCalledWith(
       expect.any(String),
       expect.objectContaining({
-        draft: false,
+        draft: true,
       })
     );
   });
