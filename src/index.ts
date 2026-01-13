@@ -58,10 +58,10 @@ program
 
 program
   .command("issue-apply")
-  .description("Implement a GitHub Issue using Haiku/Sonnet/Opus model")
+  .description("Implement a GitHub Issue using Sonnet model (default)")
   .requiredOption("-i, --issue <ref>", "Issue number or URL")
   .option("--repo <path>", "Target repository path", process.cwd())
-  .option("-m, --model <model>", "Model to use (haiku, sonnet, or opus)", "haiku")
+  .option("-m, --model <model>", "Model to use (haiku, sonnet, or opus)", "sonnet")
   .option("--draft", "Create PR as draft", true)
   .option("--no-draft", "Create PR as ready for review")
   .option("--skip-pr", "Skip PR creation")
