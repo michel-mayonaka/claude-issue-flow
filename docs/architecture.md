@@ -170,7 +170,7 @@ src/
 
 | パッケージ | 用途 |
 |-----------|------|
-| `@anthropic-ai/claude-code` | Claude Code Agent SDK |
+| `@anthropic-ai/claude-agent-sdk` | Claude Code Agent SDK |
 | `@octokit/rest` | GitHub REST API |
 | `simple-git` | Git操作 |
 | `commander` | CLIパーサー |

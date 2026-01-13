@@ -11,7 +11,7 @@ Claude Code Agent SDKを使用したGitHub Issue駆動ワークフローツー�
 
 - TypeScript (ESM)
 - Node.js 20+
-- Claude Code Agent SDK (`@anthropic-ai/claude-code`)
+- Claude Code Agent SDK (`@anthropic-ai/claude-agent-sdk`)
 - Octokit (GitHub API)
 - simple-git
 - Commander.js (CLI)
@@ -21,7 +21,7 @@ Claude Code Agent SDKを使用したGitHub Issue駆動ワークフローツー�
 
 以下のライブラリのAPI・使い方を調べる際はContext7で最新ドキュメントを取得すること：
 
-- `@anthropic-ai/claude-code` (Agent SDK)
+- `@anthropic-ai/claude-agent-sdk` (Agent SDK)
 - `octokit` (GitHub API)
 - `vitest`
 - `commander`

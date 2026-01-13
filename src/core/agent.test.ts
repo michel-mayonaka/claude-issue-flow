@@ -7,8 +7,8 @@ import {
 } from "./agent.js";
 import { AgentExecutionError } from "../types/errors.js";
 
-// Mock the @anthropic-ai/claude-code module
-vi.mock("@anthropic-ai/claude-code", () => ({
+// Mock the @anthropic-ai/claude-agent-sdk module
+vi.mock("@anthropic-ai/claude-agent-sdk", () => ({
   query: vi.fn(),
 }));
 
@@ -19,7 +19,7 @@ vi.mock("./logger.js", () => ({
   })),
 }));
 
-import { query } from "@anthropic-ai/claude-code";
+import { query } from "@anthropic-ai/claude-agent-sdk";
 
 const mockQuery = vi.mocked(query);
 

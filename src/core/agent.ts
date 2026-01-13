@@ -5,7 +5,7 @@ import {
   type SDKResultMessage,
   type SDKAssistantMessage,
   type PermissionMode,
-} from "@anthropic-ai/claude-code";
+} from "@anthropic-ai/claude-agent-sdk";
 import { ExecutionLogger } from "./logger.js";
 import { AgentExecutionError } from "../types/errors.js";
 
@@ -37,7 +37,9 @@ export async function runAgent(options: AgentOptions): Promise<AgentResult> {
       permissionMode: options.permissionMode ?? "default",
       allowedTools: options.allowedTools,
       maxTurns: options.maxTurns ?? 500,
-      appendSystemPrompt: options.appendSystemPrompt,
+      systemPrompt: options.appendSystemPrompt
+        ? { type: "preset", preset: "claude_code", append: options.appendSystemPrompt }
+        : undefined,
     };
 
     const messages: SDKMessage[] = [];
