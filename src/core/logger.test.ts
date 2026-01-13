@@ -195,4 +195,49 @@ describe("ExecutionLogger", () => {
       expect(JSON.parse(content)).toEqual(result);
     });
   });
+
+  describe("getExecutionLog", () => {
+    beforeEach(() => {
+      vi.spyOn(console, "log").mockImplementation(() => {});
+    });
+
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
+    it("should return execution log content", async () => {
+      await logger.info("Test message 1");
+      await logger.info("Test message 2");
+
+      const log = await logger.getExecutionLog();
+
+      expect(log).toContain("Test message 1");
+      expect(log).toContain("Test message 2");
+    });
+
+    it("should return empty string when log file not found", async () => {
+      const freshLogger = new ExecutionLogger("test", "nonexistent", testDir);
+      const log = await freshLogger.getExecutionLog();
+
+      expect(log).toBe("");
+    });
+  });
+
+  describe("getPrompt", () => {
+    it("should return prompt content", async () => {
+      const promptText = "This is a test prompt\nwith multiple lines";
+      await logger.saveText("prompt.txt", promptText);
+
+      const prompt = await logger.getPrompt();
+
+      expect(prompt).toBe(promptText);
+    });
+
+    it("should return empty string when prompt file not found", async () => {
+      const freshLogger = new ExecutionLogger("test", "nonexistent", testDir);
+      const prompt = await freshLogger.getPrompt();
+
+      expect(prompt).toBe("");
+    });
+  });
 });

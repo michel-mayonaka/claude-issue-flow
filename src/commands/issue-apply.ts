@@ -181,7 +181,32 @@ export async function issueApply(
 | Cost | $${result.costUSD.toFixed(4)} |
 | Duration | ${(result.durationMs / 1000).toFixed(1)}s |
 `;
-    const prBody = prBodyBase + statsSection;
+
+    // ログセクションを追記
+    const prompt = await logger.getPrompt();
+    const executionLog = await logger.getExecutionLog();
+
+    const logSection = `
+<details>
+<summary>Prompt</summary>
+
+\`\`\`
+${prompt}
+\`\`\`
+
+</details>
+
+<details>
+<summary>Execution Log</summary>
+
+\`\`\`
+${executionLog}
+\`\`\`
+
+</details>
+`;
+
+    const prBody = prBodyBase + statsSection + logSection;
 
     pr = await createPullRequest(repoPath, {
       title: prTitle,

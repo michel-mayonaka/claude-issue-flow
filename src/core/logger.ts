@@ -1,4 +1,4 @@
-import { mkdir, appendFile, writeFile } from "fs/promises";
+import { mkdir, appendFile, writeFile, readFile } from "fs/promises";
 import { join } from "path";
 
 export interface LogEntry {
@@ -119,6 +119,22 @@ export class ExecutionLogger {
 
   getLogDir(): string {
     return this.logDir;
+  }
+
+  async getExecutionLog(): Promise<string> {
+    try {
+      return await readFile(join(this.logDir, "execution.log"), "utf-8");
+    } catch {
+      return "";
+    }
+  }
+
+  async getPrompt(): Promise<string> {
+    try {
+      return await readFile(join(this.logDir, "prompt.txt"), "utf-8");
+    } catch {
+      return "";
+    }
   }
 }
 
