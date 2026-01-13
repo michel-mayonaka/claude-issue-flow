@@ -2,6 +2,8 @@
 
 ## AppError基底クラス
 
+すべてのカスタムエラーはAppErrorを継承する。
+
 ```typescript
 export class AppError extends Error {
   readonly code: string;
@@ -33,6 +35,16 @@ export class AppError extends Error {
   }
 }
 ```
+
+## 既存のエラークラス
+
+| クラス | コード | リトライ | 用途 |
+|-------|------|---------|------|
+| `AgentExecutionError` | `AGENT_EXECUTION_ERROR` | 不可 | Agent実行失敗 |
+| `GitHubAPIError` | `GITHUB_API_ERROR`/`GITHUB_RATE_LIMIT` | レート制限時は可 | GitHub API |
+| `WorktreeError` | `WORKTREE_ERROR` | 不可 | Git worktree操作 |
+| `ConfigurationError` | `CONFIGURATION_ERROR` | 不可 | 設定不備 |
+| `ParseError` | `PARSE_ERROR` | 不可 | パース失敗 |
 
 ## カスタムエラーの作成例
 
@@ -77,7 +89,7 @@ try {
 }
 ```
 
-## ユーザー向けエラー表示
+## ユーザー向けエラー表示（CLIエントリーポイント）
 
 ```typescript
 try {
@@ -92,5 +104,29 @@ try {
     console.error("Error:", error);
   }
   process.exit(1);
+}
+```
+
+## リトライ判定での使用
+
+```typescript
+function defaultShouldRetry(error: unknown): boolean {
+  if (error instanceof AppError) {
+    return error.isRetryable;
+  }
+  // Octokit特有のリトライ条件
+  if (isOctokitError(error)) {
+    const status = error.status;
+    return status === 429 || status === 503 || status === 502;
+  }
+  // ネットワークエラー
+  if (error instanceof Error) {
+    return (
+      error.message.includes("ECONNRESET") ||
+      error.message.includes("ETIMEDOUT") ||
+      error.message.includes("ENOTFOUND")
+    );
+  }
+  return false;
 }
 ```

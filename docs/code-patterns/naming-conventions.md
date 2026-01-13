@@ -31,6 +31,8 @@ import type { GitHubIssue } from "../core/github.js";
 import type { SDKMessage } from "@anthropic-ai/claude-code";
 ```
 
+**重要:** TypeScriptでも内部モジュールは`.js`拡張子を付ける（ESM形式）。
+
 ## インポート順序
 
 1. Node.js組み込みモジュール
@@ -90,7 +92,10 @@ import { AppError, GitHubIssue, ParsedPlan } from "../types/index.js";
 ## async/awaitの使用
 
 ```typescript
-export async function fetchIssue(repoPath: string, issueRef: string | number): Promise<GitHubIssue> {
+export async function fetchIssue(
+  repoPath: string,
+  issueRef: string | number
+): Promise<GitHubIssue> {
   const octokit = getOctokit();
   const { owner, repo } = getRepoInfo(repoPath);
 
@@ -195,6 +200,7 @@ program
   .requiredOption("-i, --input <value>", "必須オプション")
   .option("-o, --output <path>", "オプション", "default")
   .option("--flag", "フラグオプション", false)
+  .option("--no-flag", "フラグを無効化")
   .action(async (opts) => {
     try {
       await myCommand({
@@ -214,3 +220,12 @@ program
 
 program.parse();
 ```
+
+---
+
+# コメント規約
+
+- 日本語コメント可
+- 不要なコメントは追加しない
+- 複雑なロジックにのみコメントを付ける
+- JSDocは公開APIにのみ使用

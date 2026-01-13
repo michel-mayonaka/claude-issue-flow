@@ -1,21 +1,13 @@
-# core/github.ts
+# github.ts
 
 GitHub API操作モジュール。Octokitを使用。
 
-## fetchIssue
+**ファイル**: `src/core/github.ts`
 
-GitHub Issueを取得する。
+## 型定義
 
-**シグネチャ:**
-```typescript
-function fetchIssue(repoPath: string, issueRef: string | number): Promise<GitHubIssue>
-```
+### GitHubIssue
 
-**引数:**
-- `repoPath`: string - リポジトリのローカルパス
-- `issueRef`: string | number - Issue番号またはURL（例: `123` または `https://github.com/owner/repo/issues/123`）
-
-**戻り値:**
 ```typescript
 interface GitHubIssue {
   number: number;
@@ -29,55 +21,32 @@ interface GitHubIssue {
 }
 ```
 
-**例外:**
-- `GitHubAPIError`: API呼び出しに失敗した場合
-- `ParseError`: Issue URLの解析に失敗した場合
+### IssueCreateData
 
----
-
-## createIssue
-
-GitHub Issueを作成する。
-
-**シグネチャ:**
 ```typescript
-function createIssue(repoPath: string, data: IssueCreateData): Promise<GitHubIssue>
+interface IssueCreateData {
+  title: string;
+  body: string;
+  labels?: string[];
+  assignees?: string[];
+  milestone?: number;
+}
 ```
 
-**引数:**
-- `repoPath`: string - リポジトリのローカルパス
-- `data.title`: string - Issueタイトル
-- `data.body`: string - Issue本文
-- `data.labels?`: string[] - ラベル
-- `data.assignees?`: string[] - アサイン先
-- `data.milestone?`: number - マイルストーンID
+### PRCreateData
 
-**戻り値:**
-- GitHubIssue - 作成されたIssue情報
-
-**例外:**
-- `GitHubAPIError`: API呼び出しに失敗した場合
-
----
-
-## createPullRequest
-
-Pull Requestを作成する。
-
-**シグネチャ:**
 ```typescript
-function createPullRequest(repoPath: string, data: PRCreateData): Promise<PullRequest>
+interface PRCreateData {
+  title: string;
+  body: string;
+  head: string;
+  base: string;
+  draft?: boolean;
+}
 ```
 
-**引数:**
-- `repoPath`: string - リポジトリのローカルパス
-- `data.title`: string - PRタイトル
-- `data.body`: string - PR本文
-- `data.head`: string - ソースブランチ名
-- `data.base`: string - ターゲットブランチ名
-- `data.draft?`: boolean - ドラフトPRとして作成（デフォルト: true）
+### PullRequest
 
-**戻り値:**
 ```typescript
 interface PullRequest {
   number: number;
@@ -86,22 +55,153 @@ interface PullRequest {
 }
 ```
 
-**例外:**
-- `GitHubAPIError`: API呼び出しに失敗した場合
+## 関数
+
+### fetchIssue
+
+GitHub Issueを取得する。
+
+```typescript
+async function fetchIssue(
+  repoPath: string,
+  issueRef: string | number
+): Promise<GitHubIssue>
+```
+
+#### 引数
+
+| 引数 | 型 | 説明 |
+|-----|---|------|
+| `repoPath` | `string` | リポジトリのローカルパス |
+| `issueRef` | `string \| number` | Issue番号またはURL |
+
+#### 戻り値
+
+`GitHubIssue`オブジェクト
+
+#### エラー
+
+- `ParseError`: Issue番号の解析失敗
+- `GitHubAPIError`: API呼び出し失敗
+
+#### 使用例
+
+```typescript
+// 番号で取得
+const issue = await fetchIssue("/path/to/repo", 123);
+
+// URLで取得
+const issue = await fetchIssue(
+  "/path/to/repo",
+  "https://github.com/owner/repo/issues/123"
+);
+```
 
 ---
 
-## issueToYaml
+### createIssue
+
+GitHub Issueを作成する。
+
+```typescript
+async function createIssue(
+  repoPath: string,
+  data: IssueCreateData
+): Promise<GitHubIssue>
+```
+
+#### 引数
+
+| 引数 | 型 | 説明 |
+|-----|---|------|
+| `repoPath` | `string` | リポジトリのローカルパス |
+| `data` | `IssueCreateData` | Issue作成データ |
+
+#### 戻り値
+
+作成された`GitHubIssue`オブジェクト
+
+#### エラー
+
+- `GitHubAPIError`: API呼び出し失敗
+
+#### 使用例
+
+```typescript
+const issue = await createIssue("/path/to/repo", {
+  title: "新機能の実装",
+  body: "## 概要\n機能の説明...",
+  labels: ["enhancement", "priority:high"],
+});
+```
+
+---
+
+### createPullRequest
+
+Pull Requestを作成する。
+
+```typescript
+async function createPullRequest(
+  repoPath: string,
+  data: PRCreateData
+): Promise<PullRequest>
+```
+
+#### 引数
+
+| 引数 | 型 | 説明 |
+|-----|---|------|
+| `repoPath` | `string` | リポジトリのローカルパス |
+| `data` | `PRCreateData` | PR作成データ |
+
+#### 戻り値
+
+作成された`PullRequest`オブジェクト
+
+#### エラー
+
+- `GitHubAPIError`: API呼び出し失敗
+
+#### 使用例
+
+```typescript
+const pr = await createPullRequest("/path/to/repo", {
+  title: "feat: 新機能を追加",
+  body: "## 概要\n変更内容...\n\nCloses #123",
+  head: "feature-branch",
+  base: "main",
+  draft: true,
+});
+```
+
+---
+
+### issueToYaml
 
 GitHubIssueをYAML形式の文字列に変換する。
 
-**シグネチャ:**
 ```typescript
 function issueToYaml(issue: GitHubIssue): string
 ```
 
-**引数:**
-- `issue`: GitHubIssue - 変換するIssue
+#### 使用例
 
-**戻り値:**
-- string - YAML形式の文字列
+```typescript
+const yaml = issueToYaml(issue);
+console.log(yaml);
+// title: "Issue title"
+// number: 123
+// url: "https://..."
+// ...
+```
+
+## 認証
+
+GitHubトークンは以下の順序で取得される：
+
+1. 環境変数 `GH_TOKEN`
+2. 環境変数 `GITHUB_TOKEN`
+3. `gh auth token` コマンド（gh CLI）
+
+トークンが見つからない場合は`ConfigurationError`がスローされる。

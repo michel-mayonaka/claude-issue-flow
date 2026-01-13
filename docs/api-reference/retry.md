@@ -1,39 +1,99 @@
-# core/retry.ts
+# retry.ts
 
-リトライロジックモジュール。
+リトライ機能モジュール。指数バックオフ付き。
 
-## withRetry
+**ファイル**: `src/core/retry.ts`
 
-指数バックオフ付きリトライを行う。
+## 型定義
 
-**シグネチャ:**
+### RetryOptions
+
 ```typescript
-function withRetry<T>(
+interface RetryOptions {
+  maxAttempts?: number;       // デフォルト: 3
+  initialDelayMs?: number;    // デフォルト: 1000
+  maxDelayMs?: number;        // デフォルト: 30000
+  backoffMultiplier?: number; // デフォルト: 2
+  shouldRetry?: (error: unknown) => boolean;
+}
+```
+
+## 関数
+
+### withRetry
+
+操作をリトライ付きで実行する。
+
+```typescript
+async function withRetry<T>(
   operation: () => Promise<T>,
   options?: RetryOptions
 ): Promise<T>
 ```
 
-**引数:**
-- `operation`: () => Promise<T> - リトライ対象の非同期関数
-- `options.maxAttempts?`: number - 最大試行回数（デフォルト: 3）
-- `options.initialDelayMs?`: number - 初期遅延時間（デフォルト: 1000ms）
-- `options.maxDelayMs?`: number - 最大遅延時間（デフォルト: 30000ms）
-- `options.backoffMultiplier?`: number - バックオフ係数（デフォルト: 2）
-- `options.shouldRetry?`: (error: unknown) => boolean - リトライ判定関数
+#### 引数
 
-**戻り値:**
-- T - 操作の結果
+| 引数 | 型 | 説明 |
+|-----|---|------|
+| `operation` | `() => Promise<T>` | 実行する非同期操作 |
+| `options` | `RetryOptions?` | リトライオプション |
 
-**デフォルトのリトライ条件:**
-- `AppError`で`isRetryable`が`true`の場合
-- Octokit APIエラーでステータスが429, 502, 503の場合
-- ネットワークエラー（ECONNRESET, ETIMEDOUT, ENOTFOUND）
+#### リトライ判定
 
-**使用例:**
+デフォルトの`shouldRetry`は以下の条件でリトライ：
+
+1. `AppError`で`isRetryable`が`true`
+2. Octokitエラーでステータスが429, 502, 503
+3. ネットワークエラー（ECONNRESET, ETIMEDOUT, ENOTFOUND）
+
+#### 使用例
+
 ```typescript
+import { withRetry } from "./core/retry.js";
+
+// デフォルト設定でリトライ
 const result = await withRetry(
-  () => fetchIssue(repoPath, issueNumber),
-  { maxAttempts: 5, initialDelayMs: 2000 }
+  () => fetchDataFromAPI()
+);
+
+// カスタム設定
+const result = await withRetry(
+  () => fetchDataFromAPI(),
+  {
+    maxAttempts: 5,
+    initialDelayMs: 2000,
+    maxDelayMs: 60000,
+    backoffMultiplier: 2,
+    shouldRetry: (error) => {
+      // カスタムリトライ判定
+      return error instanceof NetworkError;
+    },
+  }
+);
+```
+
+#### バックオフ動作
+
+```
+試行1: 失敗 → 1000ms待機
+試行2: 失敗 → 2000ms待機
+試行3: 失敗 → 4000ms待機
+試行4: 失敗 → 8000ms待機
+...
+（maxDelayMsを超えない）
+```
+
+#### GitHub APIでの使用
+
+`github.ts`内では以下のように使用されている：
+
+```typescript
+const { data } = await withRetry(
+  () => octokit.issues.get({
+    owner,
+    repo,
+    issue_number: issueNumber,
+  }),
+  { maxAttempts: 3 }
 );
 ```

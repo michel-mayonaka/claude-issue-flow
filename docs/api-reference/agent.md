@@ -1,81 +1,123 @@
-# core/agent.ts
+# agent.ts
 
-Agent SDK連携モジュール。
+Claude Code Agent SDKとの連携モジュール。
 
-## runAgent
+**ファイル**: `src/core/agent.ts`
 
-エージェントを実行する。
+## 関数
 
-**シグネチャ:**
+### runAgent
+
+Agent SDKの`query`関数をラップし、エージェントを実行する。
+
 ```typescript
-function runAgent(options: AgentOptions): Promise<AgentResult>
+async function runAgent(options: AgentOptions): Promise<AgentResult>
 ```
 
-**引数:**
-- `options.prompt`: string - エージェントに送信するプロンプト
-- `options.cwd`: string - 作業ディレクトリ
-- `options.model?`: string - 使用するモデル名（例: `claude-opus-4-5-20251101`）
-- `options.permissionMode?`: PermissionMode - 権限モード（`"default"` | `"plan"` | `"bypassPermissions"`）
-- `options.allowedTools?`: string[] - 許可するツールのリスト
-- `options.maxTurns?`: number - 最大ターン数（デフォルト: 500）
-- `options.logger?`: ExecutionLogger - ログ出力用ロガー
-- `options.appendSystemPrompt?`: string - システムプロンプトに追加するテキスト
+#### AgentOptions
 
-**戻り値:**
+| プロパティ | 型 | 必須 | 説明 |
+|-----------|---|------|------|
+| `prompt` | `string` | ✓ | エージェントへの指示 |
+| `cwd` | `string` | ✓ | 作業ディレクトリ |
+| `model` | `string` | - | 使用モデル（例: `claude-opus-4-5-20251101`） |
+| `permissionMode` | `PermissionMode` | - | 権限モード（`default`, `bypassPermissions`, `plan`） |
+| `allowedTools` | `string[]` | - | 許可するツール一覧 |
+| `maxTurns` | `number` | - | 最大ターン数（デフォルト: 500） |
+| `logger` | `ExecutionLogger` | - | ログ出力用ロガー |
+| `appendSystemPrompt` | `string` | - | システムプロンプトに追加するテキスト |
+
+#### AgentResult
+
+| プロパティ | 型 | 説明 |
+|-----------|---|------|
+| `success` | `boolean` | 実行成功フラグ |
+| `result` | `string` | 結果テキスト |
+| `numTurns` | `number` | 実行ターン数 |
+| `costUSD` | `number` | コスト（USD） |
+| `durationMs` | `number` | 実行時間（ミリ秒） |
+| `messages` | `SDKMessage[]` | 全メッセージ |
+
+#### 使用例
+
 ```typescript
-interface AgentResult {
-  success: boolean;      // 実行が成功したか
-  result: string;        // 結果テキスト
-  numTurns: number;      // 実行ターン数
-  costUSD: number;       // コスト（USD）
-  durationMs: number;    // 実行時間（ミリ秒）
-  messages: SDKMessage[]; // 全メッセージ
+import { runAgent } from "./core/agent.js";
+
+const result = await runAgent({
+  prompt: "READMEファイルを読んで要約してください",
+  cwd: "/path/to/repo",
+  model: "claude-sonnet-4-5-20250929",
+  permissionMode: "bypassPermissions",
+  allowedTools: ["Read", "Glob", "Grep"],
+  maxTurns: 100,
+});
+
+if (result.success) {
+  console.log(`Result: ${result.result}`);
+  console.log(`Cost: $${result.costUSD}`);
 }
 ```
 
-**使用例:**
-```typescript
-const result = await runAgent({
-  prompt: "ファイルを読んで要約してください",
-  cwd: "/path/to/repo",
-  model: "claude-opus-4-5-20251101",
-  permissionMode: "plan",
-  allowedTools: ["Read", "Glob", "Grep"],
-  maxTurns: 100,
-  appendSystemPrompt: skills,
-});
-```
+#### エラー
+
+- `AgentExecutionError`: エージェント実行中のエラー
 
 ---
 
-## extractTextFromMessages
+### extractTextFromMessages
 
-メッセージ配列からテキストコンテンツを抽出して結合する。
+メッセージ配列からアシスタントのテキスト応答を抽出する。
 
-**シグネチャ:**
 ```typescript
 function extractTextFromMessages(messages: SDKMessage[]): string
 ```
 
-**引数:**
-- `messages`: SDKMessage[] - エージェント実行結果のメッセージ配列
+#### 引数
 
-**戻り値:**
-- string - 全アシスタントメッセージのテキストを結合した文字列
+- `messages`: Agent SDKから返されたメッセージ配列
+
+#### 戻り値
+
+アシスタントメッセージのテキスト部分を結合した文字列。
+
+#### 使用例
+
+```typescript
+const allText = extractTextFromMessages(result.messages);
+console.log(allText);
+```
 
 ---
 
-## extractFinalMessage
+### extractFinalMessage
 
-最後のアシスタントメッセージのテキストを取得する。
+メッセージ配列から最後のアシスタントテキストを取得する。
 
-**シグネチャ:**
 ```typescript
 function extractFinalMessage(messages: SDKMessage[]): string
 ```
 
-**引数:**
-- `messages`: SDKMessage[] - エージェント実行結果のメッセージ配列
+#### 引数
 
-**戻り値:**
-- string - 最後のアシスタントメッセージのテキスト（見つからない場合は空文字）
+- `messages`: Agent SDKから返されたメッセージ配列
+
+#### 戻り値
+
+最後のアシスタントメッセージのテキスト。見つからない場合は空文字列。
+
+#### 使用例
+
+```typescript
+const finalMessage = extractFinalMessage(result.messages);
+const prInfo = parsePRInfo(finalMessage);
+```
+
+---
+
+## 再エクスポート
+
+以下の型とオブジェクトがAgent SDKから再エクスポートされている：
+
+```typescript
+export { query, type Options, type SDKMessage, type PermissionMode };
+```

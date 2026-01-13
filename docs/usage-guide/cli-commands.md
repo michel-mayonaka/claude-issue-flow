@@ -30,6 +30,9 @@ npm run dev -- issue-apply --issue 123
 # Sonnetモデルを使用
 npm run dev -- issue-apply --issue 123 --model sonnet
 
+# Opusモデルを使用（複雑な実装向け）
+npm run dev -- issue-apply --issue 123 --model opus
+
 # PR作成をスキップ（ローカルで確認したい場合）
 npm run dev -- issue-apply --issue 123 --skip-pr
 
@@ -39,17 +42,20 @@ npm run dev -- issue-apply --issue 123 --no-draft
 # 完了後にWorktreeをクリーンアップ
 npm run dev -- issue-apply --issue 123 --cleanup
 
+# リモートブランチもクリーンアップ
+npm run dev -- issue-apply --issue 123 --cleanup --cleanup-remote
+
 # GitHub URLでIssueを指定
 npm run dev -- issue-apply --issue https://github.com/owner/repo/issues/123
 ```
 
 **モデル選択ガイド:**
 
-| モデル | 用途 | コスト |
-|-------|------|-------|
-| haiku | シンプルな修正、小規模な変更 | 低 |
-| sonnet | 中規模の機能追加、複雑なバグ修正 | 中 |
-| opus | 大規模な機能、アーキテクチャ変更 | 高 |
+| モデル | 実際のモデルID | 用途 | コスト |
+|-------|---------------|------|-------|
+| haiku | claude-3-5-haiku-20241022 | シンプルな修正、小規模な変更 | 低 |
+| sonnet | claude-sonnet-4-5-20250929 | 中規模の機能追加、複雑なバグ修正 | 中 |
+| opus | claude-opus-4-5-20251101 | 大規模な機能、アーキテクチャ変更 | 高 |
 
 **出力:**
 ```
@@ -61,6 +67,18 @@ PR: #45
     https://github.com/owner/repo/pull/45
 
 Logs: /path/to/repo/logs/issue-apply/20260113-143052-12345
+```
+
+**PRに含まれる統計情報:**
+```markdown
+## Agent Statistics
+
+| Item | Value |
+|------|-------|
+| Model | claude-sonnet-4-5-20250929 |
+| Turns | 42 |
+| Cost | $0.1234 |
+| Duration | 120.5s |
 ```
 
 ---
@@ -95,4 +113,13 @@ npm run dev -- plan-issue --request-file request.md
 
 # ドライラン（Issueは作成しない）
 npm run dev -- plan-issue --request "..." --dry-run
+```
+
+**出力:**
+```
+Created issues:
+  - #124
+    https://github.com/owner/repo/issues/124
+
+Logs: /path/to/repo/logs/plan-issue/20260113-143052-12345
 ```

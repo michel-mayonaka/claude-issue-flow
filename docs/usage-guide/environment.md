@@ -14,6 +14,18 @@
 - `repo`: リポジトリへのフルアクセス
 - `workflow`: GitHub Actionsワークフローの更新（必要な場合）
 
+## 技術スタック
+
+| パッケージ | バージョン | 用途 |
+|-----------|----------|------|
+| TypeScript | ESM | 開発言語 |
+| Node.js | 20+ | ランタイム |
+| @anthropic-ai/claude-code | - | Agent SDK |
+| @octokit/rest | - | GitHub API |
+| simple-git | - | Git操作 |
+| commander | - | CLIパーサー |
+| vitest | - | テスト |
+
 ## ログディレクトリ
 
 実行ログは以下の構造で保存されます：
@@ -43,7 +55,7 @@ logs/
 /plan-issue ユーザー認証機能を追加してほしい
 
 # 2. 対話しながら詳細を詰める
-# 3. 計画承認 → Issue自動作成
+# 3. 計画承認 → ExitPlanMode → Issue自動作成
 
 # 4. Issueを実装
 npm run dev -- issue-apply --issue 123 --model sonnet
@@ -72,6 +84,9 @@ npm run dev -- issue-apply --issue 789 --model opus
 
 # クリーンアップ付き（Worktree削除）
 npm run dev -- issue-apply --issue 789 --model opus --cleanup
+
+# リモートブランチもクリーンアップ
+npm run dev -- issue-apply --issue 789 --model opus --cleanup --cleanup-remote
 ```
 
 ### パターン4: ドライラン（確認のみ）
@@ -131,3 +146,25 @@ git worktree remove <path> --force
 1. `logs/<job-name>/<run-id>/execution.log`を確認
 2. `logs/<job-name>/<run-id>/messages.jsonl`でSDKメッセージを確認
 3. プロンプトが適切か`prompt.txt`を確認
+
+### GitHub API レート制限
+
+```
+[GITHUB_RATE_LIMIT] APIレート制限に達しました
+  → しばらく待ってから再試行してください。
+```
+
+**対処法:**
+- 数分待ってから再試行
+- レート制限の残り回数を確認: `gh api rate_limit`
+
+### Issue解析エラー
+
+```
+[PARSE_ERROR] Issue番号を解析できません
+  → 入力データの形式を確認してください。
+```
+
+**対処法:**
+- Issue番号が正しいか確認
+- URLの場合は完全なURLを使用（例: `https://github.com/owner/repo/issues/123`）
