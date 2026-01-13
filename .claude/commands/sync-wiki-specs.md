@@ -1,8 +1,16 @@
 # Wiki Spec同期
 
-実装コードの状態をもとに、WikiのSpec文書を自動更新・新規作成します。
+実装の状態をもとに、Spec文書を自動更新・新規作成します。
 
-**重要: このコマンドはwiki/ディレクトリのSpec-*.mdを更新します。**
+## Specの管理場所
+
+| 種類 | Spec場所 | 説明 |
+|------|----------|------|
+| カスタムコマンド | `.claude/commands/*.md` | コマンド定義自体がspec |
+| CLIコマンド | `wiki/Spec-*.md` | Wikiで管理 |
+| コア機能 | `wiki/Spec-*.md` | Wikiで管理 |
+
+**重要**: カスタムコマンド（`/commit`, `/gen-docs`等）は`.claude/commands/`の.mdファイル自体がspecです。Wikiに別途specを作成する必要はありません。
 
 ## 引数
 
@@ -17,7 +25,21 @@ $ARGUMENTS
 
 ## フェーズ1: 情報収集
 
-### 1.1 既存Specの収集
+### 1.1 カスタムコマンドSpec（.claude/commands/）
+
+`.claude/commands/*.md` を一覧化：
+
+```
+/commit        - .claude/commands/commit.md
+/gen-docs      - .claude/commands/gen-docs.md
+/plan-issue    - .claude/commands/plan-issue.md
+/sync-wiki-specs - .claude/commands/sync-wiki-specs.md
+...
+```
+
+これらは**specとして完結**しており、Wikiへの追加は不要。
+
+### 1.2 Wiki Spec（wiki/Spec-*.md）
 
 `wiki/Spec-*.md` ファイルを読み込み、以下を抽出：
 
@@ -31,27 +53,26 @@ $ARGUMENTS
 - タイトル行: `# [タイトル] [x]` または `# [タイトル] [ ]`
 - `[x]` = 実装済み、`[ ]` = 未実装
 
-### 1.2 実装コードの調査
+### 1.3 実装コードの調査
 
-以下を調査して実装済み機能を特定：
+Wiki Specの対象となる実装を調査：
 
 | 調査対象 | 判定基準 |
 |----------|----------|
 | `src/commands/*.ts` | export された関数 = CLIコマンド |
-| `.claude/commands/*.md` | ファイル存在 = カスタムコマンド |
 | `src/hooks/*.ts` | export された関数 = Hook機能 |
 | `src/core/*.ts` | 主要なexport関数 = コア機能 |
 
-### 1.3 マッピングテーブル
+**注意**: `.claude/commands/*.md`は調査対象外（自身がspec）
 
-以下のマッピングで実装とspecを対応付け：
+### 1.4 マッピングテーブル
 
-| 実装ファイル | Specファイル |
-|-------------|-------------|
-| `src/commands/plan-issue.ts` | `Spec-Plan-Issue.md` |
-| `src/commands/issue-apply.ts` | `Spec-Issue-Apply.md` |
-| `.claude/commands/commit.md` | `Spec-Commit.md` |
-| `.claude/commands/gen-docs.md` | `Spec-Gen-Docs.md` |
+Wiki Specと実装の対応付け：
+
+| 実装ファイル | Wiki Specファイル |
+|-------------|------------------|
+| `src/commands/plan-issue.ts` | `wiki/Spec-Plan-Issue.md` |
+| `src/commands/issue-apply.ts` | `wiki/Spec-Issue-Apply.md` |
 | `src/hooks/create-issue.ts` | （plan-issueに含む） |
 
 ---
@@ -70,31 +91,40 @@ $ARGUMENTS
 
 ### 2.2 新規Spec候補の検出
 
-実装はあるがspecがない機能を検出：
+実装（src/）はあるがWiki specがない機能を検出：
 
 ```
 ## 新規Spec候補
 
 | 機能 | 実装ファイル | 提案Specファイル |
 |------|-------------|-----------------|
-| commitコマンド | .claude/commands/commit.md | Spec-Commit.md |
-| gen-docsコマンド | .claude/commands/gen-docs.md | Spec-Gen-Docs.md |
+| リトライ機能 | src/core/retry.ts | wiki/Spec-Retry.md |
+| ロガー | src/core/logger.ts | wiki/Spec-Logger.md |
 ```
+
+**注意**: カスタムコマンドは`.claude/commands/`自体がspecなので候補に含めない。
 
 ### 2.3 差分サマリーの表示
 
 ```markdown
 ## 差分サマリー
 
-### ステータス更新
+### カスタムコマンド（.claude/commands/）
+| コマンド | ファイル |
+|---------|---------|
+| /commit | .claude/commands/commit.md |
+| /gen-docs | .claude/commands/gen-docs.md |
+| /plan-issue | .claude/commands/plan-issue.md |
+| ... | ... |
+
+### Wiki Spec ステータス更新
 - Spec-Plan-Issue.md: [ ] → [x]
 - Spec-Example.md: [x] → [ ]
 
-### 新規Spec作成
-- Spec-Commit.md（commitコマンド）
-- Spec-Gen-Docs.md（gen-docsコマンド）
+### Wiki Spec 新規作成候補
+- Spec-Retry.md（リトライ機能）
 
-### 変更なし
+### Wiki Spec 変更なし
 - Spec-Issue-Apply.md（一致）
 ```
 
@@ -157,13 +187,16 @@ $ARGUMENTS
 
 ### 3.3 Home.mdの更新
 
-新規specを追加した場合、`wiki/Home.md`のSpec一覧を更新：
+新規Wiki specを追加した場合、`wiki/Home.md`のSpec一覧を更新：
 
 ```markdown
+### カスタムコマンド
+.claude/commands/*.md を参照
+
 ### Spec（実装済み）
 - [Spec: 計画立案コマンド](Spec-Plan-Issue)
 - [Spec: Issue実装コマンド](Spec-Issue-Apply)
-- [Spec: コミットコマンド](Spec-Commit)  ← 追加
+- [Spec: リトライ機能](Spec-Retry)  ← 追加
 ```
 
 ---
@@ -173,16 +206,19 @@ $ARGUMENTS
 ### 4.1 更新サマリー
 
 ```markdown
-## Wiki Spec同期完了
+## Spec同期完了
 
-### 更新したSpec
+### カスタムコマンドSpec（.claude/commands/）
+7個のコマンドspec確認済み
+- /commit, /gen-docs, /plan-issue, /sync-wiki-specs, ...
+
+### Wiki Spec更新
 - Spec-Plan-Issue.md: ステータス更新 [ ] → [x]
 
-### 新規作成したSpec
-- Spec-Commit.md
-- Spec-Gen-Docs.md
+### Wiki Spec新規作成
+- Spec-Retry.md
 
-### 変更なしのSpec
+### Wiki Spec変更なし
 - Spec-Issue-Apply.md
 
 ### 次のステップ
@@ -194,18 +230,31 @@ $ARGUMENTS
 
 ## 注意事項
 
+- **カスタムコマンドはWiki不要**: `.claude/commands/*.md`自体がspec
 - specの内容（目的、要件など）は自動更新しない（ステータスのみ）
-- 新規spec作成時は実装から内容を推測するため、必ず確認が必要
+- 新規Wiki spec作成時は実装から内容を推測するため、必ず確認が必要
 - wiki/は別リポジトリなので、個別にcommit/pushが必要
 - `--dry-run`で事前確認を推奨
 
 ---
 
-## Specファイル命名規則
+## Spec管理ルール
+
+### カスタムコマンド（.claude/commands/）
+
+| ファイル | 役割 |
+|---------|------|
+| `.claude/commands/commit.md` | /commitのspec |
+| `.claude/commands/gen-docs.md` | /gen-docsのspec |
+| `.claude/commands/plan-issue.md` | /plan-issueのspec |
+| ... | ... |
+
+**Wikiに別途specを作成する必要はない。**
+
+### Wiki Spec（wiki/Spec-*.md）
 
 | 機能タイプ | 命名パターン | 例 |
 |-----------|-------------|-----|
 | CLIコマンド | `Spec-[Command].md` | `Spec-Issue-Apply.md` |
-| カスタムコマンド | `Spec-[Command].md` | `Spec-Commit.md` |
 | コア機能 | `Spec-[Feature].md` | `Spec-Milestone-Sync.md` |
 | ビジョン | `Architecture-[Topic].md` | `Architecture-Vision.md` |
