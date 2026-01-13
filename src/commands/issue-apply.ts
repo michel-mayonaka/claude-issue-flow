@@ -91,7 +91,7 @@ export async function issueApply(
 
   // 5. Run agent
   await logger.info("Running agent...");
-  const modelKey = options.model ?? "haiku";
+  const modelKey = options.model ?? "sonnet";
   const model = MODEL_MAP[modelKey];
   await logger.info(`Using model: ${model}`);
 
