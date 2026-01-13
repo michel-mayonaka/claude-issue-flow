@@ -49,6 +49,7 @@ docs/                  # コードベースドキュメント（/gen-docsで生�
 skills/
 ├── global/            # 全体で使用するスキル
 └── optional/          # オプションスキル
+wiki/                  # GitHub Wiki（別gitリポジトリ、.gitignoreで除外）
 ```
 
 ## コードベース理解
