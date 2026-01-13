@@ -17,6 +17,7 @@ export interface AgentOptions {
   allowedTools?: string[];
   maxTurns?: number;
   logger?: ExecutionLogger;
+  appendSystemPrompt?: string;
 }
 
 export interface AgentResult {
@@ -36,6 +37,7 @@ export async function runAgent(options: AgentOptions): Promise<AgentResult> {
       permissionMode: options.permissionMode ?? "default",
       allowedTools: options.allowedTools,
       maxTurns: options.maxTurns ?? 500,
+      appendSystemPrompt: options.appendSystemPrompt,
     };
 
     const messages: SDKMessage[] = [];

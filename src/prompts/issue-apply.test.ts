@@ -21,11 +21,9 @@ describe("buildIssueApplyPrompt", () => {
   it("should build prompt with issue info", () => {
     const result = buildIssueApplyPrompt({
       issue: mockIssue,
-      skills: "# Skills\nNo hallucination allowed",
     });
 
-    expect(result).toContain("# Agent Skills");
-    expect(result).toContain("No hallucination allowed");
+    expect(result).toContain("# タスク: GitHub Issue実装");
     expect(result).toContain("Test Issue");
     expect(result).toContain("#123");
     expect(result).toContain("enhancement, priority-high");
@@ -35,7 +33,6 @@ describe("buildIssueApplyPrompt", () => {
   it("should include implementation rules", () => {
     const result = buildIssueApplyPrompt({
       issue: mockIssue,
-      skills: "",
     });
 
     expect(result).toContain("受け入れ条件を最優先");
@@ -46,7 +43,6 @@ describe("buildIssueApplyPrompt", () => {
   it("should include PR info format", () => {
     const result = buildIssueApplyPrompt({
       issue: mockIssue,
-      skills: "",
     });
 
     expect(result).toContain("pr_title:");
@@ -62,7 +58,6 @@ describe("buildIssueApplyPrompt", () => {
 
     const result = buildIssueApplyPrompt({
       issue: issueNoLabels,
-      skills: "",
     });
 
     expect(result).toContain("**Labels**: なし");

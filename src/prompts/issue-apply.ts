@@ -2,15 +2,10 @@ import type { GitHubIssue } from "../core/github.js";
 
 export interface IssueApplyPromptOptions {
   issue: GitHubIssue;
-  skills: string;
 }
 
 export function buildIssueApplyPrompt(options: IssueApplyPromptOptions): string {
-  return `# Agent Skills
-
-${options.skills}
-
-# タスク: GitHub Issue実装
+  return `# タスク: GitHub Issue実装
 
 以下のIssueの内容を実装してください。
 

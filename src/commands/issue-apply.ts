@@ -85,8 +85,9 @@ export async function issueApply(
   });
 
   // 4. Build prompt
-  const prompt = buildIssueApplyPrompt({ issue, skills });
+  const prompt = buildIssueApplyPrompt({ issue });
   await logger.saveText("prompt.txt", prompt);
+  await logger.saveText("system_prompt_append.txt", skills);
 
   // 5. Run agent
   await logger.info("Running agent...");
@@ -111,6 +112,7 @@ export async function issueApply(
     ],
     maxTurns: 500,
     logger,
+    appendSystemPrompt: skills,
   });
 
   await logger.info("Agent completed", {
