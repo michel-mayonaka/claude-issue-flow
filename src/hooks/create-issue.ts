@@ -18,6 +18,7 @@ import { createIssue } from "../core/github.js";
 import { parsePlanFromInput } from "../core/parsing.js";
 import type { HookInput } from "../types/index.js";
 import { readFileSync } from "fs";
+import { spawn } from "child_process";
 
 function extractPlanFromTranscript(transcriptPath: string): string | null {
   // JSONLファイルを読み込み
@@ -102,6 +103,20 @@ async function main() {
     // 成功メッセージを出力（Claudeのトランスクリプトに追加される）
     console.log(`GitHub Issue created: #${issue.number}`);
     console.log(`  ${issue.url}`);
+
+    // issue-applyをバックグラウンドで起動
+    console.log(`\nStarting issue-apply in background...`);
+    const child = spawn(
+      "npm",
+      ["run", "dev", "--", "issue-apply", "--issue", String(issue.number)],
+      {
+        cwd: input.cwd,
+        detached: true,
+        stdio: "ignore",
+      }
+    );
+    child.unref();
+    console.log(`issue-apply started for #${issue.number} (background)`);
 
     process.exit(0);
   } catch (error) {
