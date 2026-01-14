@@ -1,8 +1,8 @@
 # ドキュメント生成
 
-ソースコードを解析し、AIフレンドリーなドキュメントを`docs/`に生成・更新します。
+ソースコードを解析し、AIフレンドリーなドキュメントを`codegen-docs/`に生成・更新します。
 
-**重要: このコマンドはdocs/ディレクトリにドキュメントを生成します。**
+**重要: このコマンドはcodegen-docs/ディレクトリにドキュメントを生成します。**
 
 ## 引数
 
@@ -18,7 +18,7 @@ $ARGUMENTS
 ## ディレクトリ構造
 
 ```
-docs/
+codegen-docs/
 ├── architecture.md              # 単一ファイル
 ├── api-reference/
 │   ├── index.md                # 目次 + source_hash
@@ -50,16 +50,16 @@ docs/
 
 ### 1.1 ディレクトリ確認
 
-`docs/`ディレクトリの存在を確認。なければ作成。
+`codegen-docs/`ディレクトリの存在を確認。なければ作成。
 
 ### 1.2 既存ドキュメントの確認
 
 以下のファイルが存在するか確認し、存在する場合はフロントマターから`source_hash`を取得：
 
-- `docs/architecture.md`
-- `docs/api-reference/index.md`
-- `docs/usage-guide/index.md`
-- `docs/code-patterns/index.md`
+- `codegen-docs/architecture.md`
+- `codegen-docs/api-reference/index.md`
+- `codegen-docs/usage-guide/index.md`
+- `codegen-docs/code-patterns/index.md`
 
 ### 1.3 現在のソースハッシュ計算
 
@@ -133,7 +133,7 @@ cat src/types/errors.ts src/prompts/*.ts 2>/dev/null | shasum -a 256 | cut -c1-1
 3. 依存関係（import文から抽出）
 4. データフロー（主要な処理の流れ）
 
-**出力先:** `docs/architecture.md`
+**出力先:** `codegen-docs/architecture.md`
 
 ---
 
@@ -231,12 +231,12 @@ files:
 ## ドキュメント生成完了
 
 ### 更新ファイル
-- docs/architecture.md（新規作成）
-- docs/api-reference/（更新: 10ファイル）
-- docs/code-patterns/（更新: 5ファイル）
+- codegen-docs/architecture.md（新規作成）
+- codegen-docs/api-reference/（更新: 10ファイル）
+- codegen-docs/code-patterns/（更新: 5ファイル）
 
 ### 更新なし
-- docs/usage-guide/（ハッシュ一致）
+- codegen-docs/usage-guide/（ハッシュ一致）
 
 ### 次のステップ
 - 内容を確認して必要に応じて手動修正

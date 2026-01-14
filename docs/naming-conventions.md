@@ -4,12 +4,77 @@
 
 | 対象 | 規約 | 例 |
 |-----|------|-----|
+| ディレクトリ名 | kebab-case | `api-reference/`, `code-patterns/` |
 | ファイル名 | kebab-case | `issue-apply.ts`, `create-issue.ts` |
 | 関数名 | camelCase | `createIssue`, `fetchIssue`, `runAgent` |
 | クラス名 | PascalCase | `AppError`, `ExecutionLogger` |
 | 型/Interface | PascalCase | `AgentOptions`, `GitHubIssue` |
 | 定数 | camelCase または UPPER_SNAKE_CASE | `MODEL_MAP`, `maxAttempts` |
 | 型パラメータ | 単一大文字 | `T`, `K`, `V` |
+
+---
+
+# ディレクトリ・ファイル命名規則
+
+## ディレクトリ名
+
+**すべて kebab-case を使用する。**
+
+```
+src/
+├── commands/       # CLIコマンド実装
+├── core/           # コア機能モジュール
+├── prompts/        # プロンプト生成
+├── hooks/          # Claude Code hooks実装
+└── types/          # 型定義
+
+docs/
+├── api-reference/  # APIリファレンス
+├── code-patterns/  # コーディングパターン
+└── usage-guide/    # 使用ガイド
+
+skills/
+├── global/         # 全体で使用するスキル
+└── optional/       # オプションスキル
+```
+
+## ファイル名
+
+### TypeScript ファイル (.ts)
+
+**kebab-case を使用する。**
+
+| 種別 | 命名パターン | 例 |
+|------|-------------|-----|
+| CLIコマンド | コマンド名と一致 | `issue-apply.ts`, `plan-issue.ts` |
+| コアモジュール | 機能名 | `github.ts`, `worktree.ts`, `logger.ts` |
+| プロンプト | 対応コマンド名 or 機能名 | `issue-apply.ts`, `skills.ts` |
+| hooks | 処理名 | `create-issue.ts` |
+| 型定義 | 内容を表す名前 | `errors.ts` |
+| エントリーポイント | `index.ts` | `src/index.ts`, `src/types/index.ts` |
+| テスト | `{filename}.test.ts` | `agent.test.ts`, `issue-apply.test.ts` |
+
+### Markdown ファイル (.md)
+
+| 種別 | 命名パターン | 例 |
+|------|-------------|-----|
+| Claude Codeコマンド | コマンド名（kebab-case） | `plan-issue.md`, `gen-docs.md` |
+| スキル | スキル名（kebab-case） | `doc-check.md`, `test-run.md` |
+| ドキュメント | トピック名（kebab-case） | `error-handling.md`, `naming-conventions.md` |
+| 特殊ファイル | UPPER_CASE | `README.md`, `CLAUDE.md`, `INBOX.md` |
+
+### 設定ファイル
+
+標準的な命名規則に従う:
+- `package.json`, `tsconfig.json`, `vitest.config.ts`
+- `.gitignore`, `.mcp.json`
+
+## 命名規則の理由
+
+1. **CLIとの整合性**: コマンド名 `issue-apply` とファイル名が一致し、対応関係が明確
+2. **URL/パス親和性**: ハイフンはURLで安全に使用可能
+3. **可読性**: 複数単語のファイル名で明確に区切れる
+4. **一貫性**: プロジェクト全体で統一された命名
 
 ---
 

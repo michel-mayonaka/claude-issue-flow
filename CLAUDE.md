@@ -41,7 +41,9 @@ src/
 ├── hooks/             # Claude Code hooks実装
 ├── prompts/           # プロンプトテンプレート
 └── types/             # 型定義（エラークラス含む）
-docs/                  # コードベースドキュメント（/gen-docsで生成）
+docs/                  # リポジトリのルール・規約（手動管理）
+├── naming-conventions.md
+codegen-docs/          # コードベースドキュメント（/gen-docsで自動生成）
 ├── architecture.md
 ├── api-reference/
 ├── usage-guide/
@@ -54,14 +56,20 @@ wiki/                  # GitHub Wiki（別gitリポジトリ、.gitignoreで除�
 
 ## コードベース理解
 
-実装作業を開始する前に、`docs/`のドキュメントを参照してコードベースの概要を把握すること：
+実装作業を開始する前に、以下のドキュメントを参照してコードベースの概要を把握すること：
 
-- `docs/architecture.md`: モジュール構成、レイヤー構造、依存関係
-- `docs/api-reference/`: 公開API・関数のリファレンス
-- `docs/usage-guide/`: CLI・コマンドの使い方
-- `docs/code-patterns/`: コーディングパターン・規約
+### ルール・規約（手動管理）
 
-ドキュメントが古い場合は`/gen-docs`で再生成できる。
+- `docs/naming-conventions.md`: ディレクトリ・ファイル命名規則、コーディング規約
+
+### コードリファレンス（自動生成）
+
+- `codegen-docs/architecture.md`: モジュール構成、レイヤー構造、依存関係
+- `codegen-docs/api-reference/`: 公開API・関数のリファレンス
+- `codegen-docs/usage-guide/`: CLI・コマンドの使い方
+- `codegen-docs/code-patterns/`: コーディングパターン
+
+自動生成ドキュメントが古い場合は`/gen-docs`で再生成できる。
 
 ## ドキュメント管理ポリシー
 
@@ -69,12 +77,14 @@ wiki/                  # GitHub Wiki（別gitリポジトリ、.gitignoreで除�
 |------|------|
 | **Repository** | 現実（今あるコード） |
 | **Issue** | 改善（変えたいこと） |
+| **docs/** | ルール・規約（手動管理） |
+| **codegen-docs/** | コードリファレンス（自動生成） |
 
 ### 最新性の担保
 
 コードに追従してドキュメント・テストを最新に保つため、以下のコマンドを活用する：
 
-- `/gen-docs`: コードベースからドキュメントを自動生成・更新
+- `/gen-docs`: コードベースから`codegen-docs/`にドキュメントを自動生成・更新
 - `/commit`: コミット時にテスト・型チェックを実行
 
 **重要**: コミットの際は必ず `/commit` を使うこと。
